@@ -1,0 +1,4 @@
+zone "hospital.com" {
+    type master;
+    file "/etc/bind/db.hospital.com";
+};
