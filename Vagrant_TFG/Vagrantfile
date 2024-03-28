@@ -1,18 +1,29 @@
 Vagrant.configure("2") do |config|
-
-  config.vm.define "SRV-ENRUTADOR" do |router|
-    router.vm.box = "gusztavvargadr/ubuntu-server"
-    # Interfaces de red
-
-    router.vm.network "public_network", type: "dhcp"
-    router.vm.network "private_network", type: "static", ip: "192.168.1.1", name: "enp0s8"
-    router.vm.network "private_network", type: "static", ip: "192.168.100.1", name: "enp0s9"
-    # DHCP y Bind9
-    router.vm.provision "shell", inline: <<-SHELL
-      sudo apt-get update
-      sudo apt-get upgrade -y
-      sudo apt-get install -y isc-dhcp-server
-      sudo apt-get install -y bind9
+  config.vm.provider :hyperv do |hyperv|
+    hyperv.vm.box = "gusztavvargadr/ubuntu-server"
+      # Interfaces de red
+      hyperv.vm.network "public_network", bridge: "Puente"
+      hyperv.vm.network "private_network", ip: "192.168.1.1",  type: "internal"
+      hyperv.vm.network "private_network", ip: "192.168.100.1",  type: "internal"
+      # DHCP y Bind9
+      hyperv.vm.provision "shell", path: "scriptenr.sh"
+        sudo apt-get update
+        sudo apt-get upgrade -y
+        sudo apt-get install -y isc-dhcp-server
+        sudo apt-get install -y bind9
+        # Editamos 
+        sudo rm -r /etc/netplan/00-network-manager-all.yaml
+        sudo tee /etc/netplan/00-network-manager-all.yaml >/dev/null <<~EOL
+          network:
+           version: 2
+           renderer: networkd
+           ethernets:
+            eth0: # Interfaz pública
+             dhcp4: true
+            eth1: #Interfaz privada 1 
+             addresses: [192.168.1.1/24]
+            eth2: # Interfaz privada 2
+              addresses: [192.168.100.1/24]
   
       # Configuración del servidor DHCP
       sudo tee /etc/dhcp/dhcpd.conf > /dev/null <<~EOL
