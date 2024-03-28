@@ -7,93 +7,93 @@ Vagrant.configure("2") do |config|
       hyperv.vm.network "private_network", ip: "192.168.100.1",  type: "internal"
       # DHCP y Bind9
       hyperv.vm.provision "shell", path: "scriptenr.sh"
-        sudo apt-get update
-        sudo apt-get upgrade -y
-        sudo apt-get install -y isc-dhcp-server
-        sudo apt-get install -y bind9
+      #  sudo apt-get update
+       # sudo apt-get upgrade -y
+       # sudo apt-get install -y isc-dhcp-server
+       # sudo apt-get install -y bind9
         # Editamos 
-        sudo rm -r /etc/netplan/00-network-manager-all.yaml
-        sudo tee /etc/netplan/00-network-manager-all.yaml >/dev/null <<~EOL
-          network:
-           version: 2
-           renderer: networkd
-           ethernets:
-            eth0: # Interfaz pública
-             dhcp4: true
-            eth1: #Interfaz privada 1 
-             addresses: [192.168.1.1/24]
-            eth2: # Interfaz privada 2
-              addresses: [192.168.100.1/24]
+       # sudo rm -r /etc/netplan/00-network-manager-all.yaml
+       # sudo tee /etc/netplan/00-network-manager-all.yaml >/dev/null <<~EOL
+        #  network:
+        #   version: 2
+          # renderer: networkd
+         #  ethernets:
+          #  eth0: # Interfaz pública
+          #   dhcp4: true
+         #   eth1: #Interfaz privada 1 
+          #   addresses: [192.168.1.1/24]
+          #  eth2: # Interfaz privada 2
+            #  addresses: [192.168.100.1/24]
   
       # Configuración del servidor DHCP
-      sudo tee /etc/dhcp/dhcpd.conf > /dev/null <<~EOL
-      subnet 192.168.1.0 netmask 255.255.255.0 {
-        range 192.168.1.50 192.168.1.100;
-        option routers 192.168.1.1;
-        option domain-name-servers 8.8.8.8, 8.8.4.4;
-      }
+     # sudo tee /etc/dhcp/dhcpd.conf > /dev/null <<~EOL
+    #  subnet 192.168.1.0 netmask 255.255.255.0 {
+    #    range 192.168.1.50 192.168.1.100;
+    #    option routers 192.168.1.1;
+    #    option domain-name-servers 8.8.8.8, 8.8.4.4;
+    #  }
   
-      subnet 192.168.100.0 netmask 255.255.255.252 {
-        range 192.168.100.2 192.168.100.2;
-        option routers 192.168.100.1;
-        option domain-name-servers 8.8.8.8, 8.8.4.4;
-      }
-      EOL
+    #  subnet 192.168.100.0 netmask 255.255.255.252 {
+    #    range 192.168.100.2 192.168.100.2;
+    #    option routers 192.168.100.1;
+    #    option domain-name-servers 8.8.8.8, 8.8.4.4;
+    #  }
+    #  EOL
   
       # Configura las interfaces para DHCP
-      sudo tee /etc/default/isc-dhcp-server > /dev/null <<~EOL
-      INTERFACESv4="enp0s8 enp0s9"
-      EOL
+    #  sudo tee /etc/default/isc-dhcp-server > /dev/null <<~EOL
+     # INTERFACESv4="enp0s8 enp0s9"
+     # EOL
   
       # Reinicia el servicio DHCP
-      sudo service isc-dhcp-server restart
-    SHELL
+     # sudo service isc-dhcp-server restart
+#    SHELL
   
-    router.vm.provision "file", source: "vagrant/named.conf.options", destination: "/etc/bind/named.conf.options"
-    router.vm.provision "file", source: "vagrant/db.local", destination: "/etc/bind/db.local"
+  #  router.vm.provision "file", source: "vagrant/named.conf.options", destination: "/etc/bind/named.conf.options"
+ #   router.vm.provision "file", source: "vagrant/db.local", destination: "/etc/bind/db.local"
 
-    #REINICIAMOS BIND9
-    router.vm.provision "shell", inline: <<-SHELL
-      sudo systemctl restart bind9
-    SHELL
+ #   #REINICIAMOS BIND9
+  #  router.vm.provision "shell", inline: <<-SHELL
+  #    sudo systemctl restart bind9
+  #  SHELL
 
     #ENRUTAMIENTO
-    router.vm.provision "shell", inline: <<-SHELL
-      sudo nft add chain nat prerouting { type nat hook prerouting priority 0 \; }
-      sudo nft add chain nat postrouting { type nat hook postrouting priority 100 \; }
-      sudo nft list chains
-      sudo echo 1 > /proc/sys/net/ipv4/ip_forward
-    SHELL
+  #  router.vm.provision "shell", inline: <<-SHELL
+    #  sudo nft add chain nat prerouting { type nat hook prerouting priority 0 \; }
+   #   sudo nft add chain nat postrouting { type nat hook postrouting priority 100 \; }
+    #  sudo nft list chains
+    #  sudo echo 1 > /proc/sys/net/ipv4/ip_forward
+  #  SHELL
 
     #ZABBIX-SRV
-    router.vm.provision "shell", inline: <<-SHELL
-    sudo su
-    sudo wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
-    sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
-    sudo apt update
-    sudo apt install zabbix-server-mysql zabbix-agent zabbix-apache-conf zabbix-sql-scripts  zabbix-frontend-php
-    sudo mysql -u root
-    ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sebas';
-    FLUSH PRIVILEGES;
-    create database zabbix character set utf8mb4 collate utf8mb4_bin;
-    create user zabbix@localhost identified by 'sebas';
-    grant all privileges on zabbix.* to zabbix@localhost;
-    set global log_bin_trust_function_creators = 1;
-    quit;
-    sudo zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix
-    sudo mysql -u root
-    set global log_bin_trust_function_creators = 0;
-    quit;
-    sudo tee /etc/zabbix/zabbix_server.conf > /dev/null <<~EOL
-    DBPassword=sebas
-      EOL
-    sudo systemctl restart zabbix-server zabbix-agent apache2 
-    sudo systemctl enable zabbix-server zabbix-agent apache2 
+  #  router.vm.provision "shell", inline: <<-SHELL
+ #   sudo su
+ #   sudo wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
+ #   sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+ #   sudo apt update
+ #   sudo apt install zabbix-server-mysql zabbix-agent zabbix-apache-conf zabbix-sql-scripts  zabbix-frontend-php
+   # sudo mysql -u root
+   # ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'sebas';
+   # FLUSH PRIVILEGES;
+   # create database zabbix character set utf8mb4 collate utf8mb4_bin;
+    #create user zabbix@localhost identified by 'sebas';
+    #grant all privileges on zabbix.* to zabbix@localhost;
+    #set global log_bin_trust_function_creators = 1;
+   # quit;
+    #sudo zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p zabbix
+    #sudo mysql -u root
+  #  set global log_bin_trust_function_creators = 0;
+  #  quit;
+  #  sudo tee /etc/zabbix/zabbix_server.conf > /dev/null <<~EOL
+  #  DBPassword=sebas
+  #    EOL
+#    sudo systemctl restart zabbix-server zabbix-agent apache2 
+ #   sudo systemctl enable zabbix-server zabbix-agent apache2 
 
 
-    SHELL
-  end
-  
+ #   SHELL
+#  end
+  =begin
   config.vm.define "SRV-ODOO" do |odoo|
     odoo.vm.box = "gusztavvargadr/ubuntu-desktop"
     odoo.vm.network "private_network", type: "static", ip: "192.168.1.2"
@@ -126,3 +126,4 @@ Vagrant.configure("2") do |config|
   end
 
 end
+=end
