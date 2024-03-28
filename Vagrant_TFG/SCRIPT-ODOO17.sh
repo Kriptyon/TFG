@@ -61,7 +61,8 @@ network:
 EOL
 )
 
-
+echo "$nuevo_netplan" | sudo tee /etc/netplan/00-network-manager-all.yaml > /dev/null
+sudo netplan apply
 
 #PAM
 # Password Complexity (Using PAM modules)
