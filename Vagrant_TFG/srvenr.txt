@@ -60,7 +60,7 @@ network:
       dhcp4: true
     eth1: # Interfaz privada 1
       dhcp4: false
-      addresses: [192.168.1.1/24]
+      addresses: [192.168.2.1/24]
     eth2: # Interfaz privada 2
       dhcp4: false
       addresses: [192.168.100.1/24]
@@ -75,9 +75,9 @@ sudo netplan apply
 sudo apt install -y isc-dhcp-server
 
 nuevo_dhcp=$(cat <<EOL
-subnet 192.168.1.0 netmask 255.255.255.0 {
-  range 192.168.1.50 192.168.1.100;
-  option routers 192.168.1.1;
+subnet 192.168.2.0 netmask 255.255.255.0 {
+  range 192.168.2.50 192.168.2.100;
+  option routers 192.168.2.1;
   option domain-name-servers 8.8.8.8, 8.8.4.4;
 }
 
@@ -110,7 +110,7 @@ options {
     directory "/var/cache/bind";
 
     // Si tienes alguna IP de red específica a la cual BIND9 debería escuchar, puedes especificarla aquí
-    // listen-on port 53 { 192.168.1.1; };
+    // listen-on port 53 { 192.168.2.1; };
 
     // Permite consultas de cualquier dirección IP
     allow-query { any; };
@@ -127,7 +127,7 @@ zone "healthcert.com" {
     file "/etc/bind/zones/db.healthcert.com";
 };
 
-// Zona inversa para la subred 192.168.1.0/24
+// Zona inversa para la subred 192.168.2.0/24
 zone "1.168.192.in-addr.arpa" {
     type master;
     file "/etc/bind/zones/db.192";
@@ -156,7 +156,7 @@ $ORIGIN healthcert.com.
         IN      NS      SRV-ENR.healthcert.com.
         IN      NS      SRV-ENR.healthcert.com.
 
-SRV-ENR     IN      A       192.168.1.1
+SRV-ENR     IN      A       192.168.2.1
 SRV-ENR     IN      A       192.168.100.1
 
 
@@ -166,7 +166,7 @@ echo "$nuevo_zonad" | sudo tee /etc/bind/zones/db.healthcert.com
 
 nuevo_zonai1=$(cat <<EOL
 $TTL 86400
-$ORIGIN 1.168.192.in-addr.arpa.
+$ORIGIN 2.168.192.in-addr.arpa.
 @       IN      SOA     ns1.healthcert.com. root.healthcert.com. (
                           2              ; Serial
                           604800         ; Refresh
@@ -175,10 +175,10 @@ $ORIGIN 1.168.192.in-addr.arpa.
                           604800 )       ; Negative Cache TTL
 ;
 
-@       IN      NS      ns1.healthcert.com.
-@       IN      NS      ns2.healthcert.com.
+@       IN      NS      SRV-ENR.healthcert.com.
+@       IN      NS      SRV-ENR.healthcert.com.
 
-1       IN      PTR     ns1.healthcert.com.     ; IP inversa de 192.168.1.1
+1       IN      PTR     SRV-ENR.healthcert.com.     ; IP inversa de 192.168.2.1
 
 
 EOL
