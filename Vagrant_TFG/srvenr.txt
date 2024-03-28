@@ -52,11 +52,27 @@ fi
 
 #Netplan
 nuevo_netplan=$(cat <<EOL
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    eth0: # Interfaz pública
+      dhcp4: true
+    eth1: # Interfaz privada 1
+      dhcp4: false
+      addresses: [192.168.1.1/24]
+    eth2: # Interfaz privada 2
+      dhcp4: false
+      addresses: [192.168.100.1/24]
+EOL
+)
+echo "$nuevo_netplan" | sudo tee /etc/netplan/00-network-manager-all.yaml
+sudo netplan apply
 
 
 # DHCP
 
-sudo apt install isc-dhcp-server
+sudo apt install -y isc-dhcp-server
 
 nuevo_dhcp=$(cat <<EOL
 subnet 192.168.1.0 netmask 255.255.255.0 {
@@ -76,10 +92,169 @@ EOL
 # Sobrescribir el archivo de configuración de DHCP con el nuevo contenido
 echo "$nuevo_dhcp" | sudo tee /etc/dhcp/dhcpd.conf > /dev/null
 
+# Configura las interfaces para DHCP
+sudo tee /etc/default/isc-dhcp-server > /dev/null <<~EOL
+      INTERFACESv4="eth1 eth2"
+      EOL
+
+# Reinicia el servicio DHCP
+sudo service isc-dhcp-server restart
+
+
 # DNS
+sudo apt install -y bind9
+
+nuevo_named=$(cat <<EOL
+// Contenido de named.conf
+options {
+    directory "/var/cache/bind";
+
+    // Si tienes alguna IP de red específica a la cual BIND9 debería escuchar, puedes especificarla aquí
+    // listen-on port 53 { 192.168.1.1; };
+
+    // Permite consultas de cualquier dirección IP
+    allow-query { any; };
+};
+
+EOL
+)
+echo "$nuevo_named" | sudo tee /etc/bind/named.conf
+
+nuevo_namedloc=$(cat <<EOL
+// Definición de las zonas locales
+zone "healthcert.com" {
+    type master;
+    file "/etc/bind/zones/db.healthcert.com";
+};
+
+// Zona inversa para la subred 192.168.1.0/24
+zone "1.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/zones/db.192";
+};
+
+// Zona inversa para la subred 192.168.100.0/24
+zone "100.168.192.in-addr.arpa" {
+    type master;
+    file "/etc/bind/zones/db.100";
+};
+EOL
+)
+echo "$nuevo_namedloc" | sudo tee /etc/bind/named.conf.local
+
+nuevo_zonad=$(cat <<EOL
+; Contenido de db.healthcert.com
+$TTL    86400
+$ORIGIN healthcert.com.
+@       IN      SOA     SRV-ENR.healthcert.com. root.healthcert.com. (
+                          1                  ; Serial
+                          3600               ; Refresh
+                          1800               ; Retry
+                          604800             ; Expire
+                          86400 )            ; Minimum TTL
+
+        IN      NS      SRV-ENR.healthcert.com.
+        IN      NS      SRV-ENR.healthcert.com.
+
+SRV-ENR     IN      A       192.168.1.1
+SRV-ENR     IN      A       192.168.100.1
 
 
+EOL
+)
+echo "$nuevo_zonad" | sudo tee /etc/bind/zones/db.healthcert.com
 
+nuevo_zonai1=$(cat <<EOL
+$TTL 86400
+$ORIGIN 1.168.192.in-addr.arpa.
+@       IN      SOA     ns1.healthcert.com. root.healthcert.com. (
+                          2              ; Serial
+                          604800         ; Refresh
+                          86400          ; Retry
+                          2419200        ; Expire
+                          604800 )       ; Negative Cache TTL
+;
+
+@       IN      NS      ns1.healthcert.com.
+@       IN      NS      ns2.healthcert.com.
+
+1       IN      PTR     ns1.healthcert.com.     ; IP inversa de 192.168.1.1
+
+
+EOL
+)
+
+echo "$nuevo_zonai1" | sudo tee /etc/bind/zones/db.192
+
+nuevo_zonai2=$(cat <<EOL
+$TTL 86400
+$ORIGIN 100.168.192.in-addr.arpa.
+@       IN      SOA     SRV-ENR.healthcert.com. root.healthcert.com. (
+                          3              ; Serial
+                          604800         ; Refresh
+                          86400          ; Retry
+                          2419200        ; Expire
+                          604800 )       ; Negative Cache TTL
+;
+
+@       IN      NS      SRV-ENR.healthcert.com.
+@       IN      NS      SRV-ENR.healthcert.com.
+
+1       IN      PTR     SRV-ENR.healthcert.com.     ; IP inversa de 192.168.100.1
+
+EOL
+)
+
+echo "$nuevo_zonai2" | sudo tee /etc/bind/zones/db.100
+
+sudo systemctl restart bind9
+
+#Instalación de Zabbix y prerequisitos
+
+sudo apt install -y nginx
+sudo systemctl restart nginx
+sudo apt install -y mysql-server
+sudo systemctl start mysql
+sudo systemctl enable mysql
+sudo apt install -y php-fpm php-mysql
+sudo systemctl restart php7.4-fpm
+
+# Contraseña para MySQL y Zabbix
+password="sebas"
+
+# Agregar el repositorio de Zabbix
+wget https://repo.zabbix.com/zabbix/5.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.4-1+ubuntu20.04_all.deb
+sudo dpkg -i zabbix-release_5.4-1+ubuntu20.04_all.deb
+sudo apt update
+
+# Instalar Zabbix Server, Frontend y Agent
+sudo apt install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+
+# Configurar MySQL
+sudo debconf-set-selections <<< "mysql-server mysql-server/root_password password $password"
+sudo debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $password"
+sudo apt-get install -y mysql-server
+
+# Crear la base de datos de Zabbix y configurar el usuario de MySQL
+sudo mysql -uroot -p$password -e "CREATE DATABASE zabbix character set utf8 collate utf8_bin;"
+sudo mysql -uroot -p$password -e "CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$password';"
+sudo mysql -uroot -p$password -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost' WITH GRANT OPTION;"
+sudo mysql -uroot -p$password -e "FLUSH PRIVILEGES;"
+
+# Importar el esquema inicial de la base de datos de Zabbix
+zcat /usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz | sudo mysql -uzabbix -p$password zabbix
+
+# Configurar el servidor Zabbix
+sudo sed -i "s/# DBPassword=/DBPassword=$password/" /etc/zabbix/zabbix_server.conf
+
+# Iniciar y habilitar los servicios de Zabbix
+sudo systemctl start zabbix-server
+sudo systemctl enable zabbix-server
+
+# Reiniciar el servidor web
+sudo systemctl restart apache2
+
+echo "Zabbix se ha instalado y configurado correctamente con la contraseña 'sebas'."
 
 
 
@@ -95,14 +270,7 @@ sed -i 's/#PubkeyAuthentication yes/PubkeyAuthentication yes/' /etc/ssh/sshd_con
 systemctl mask sleep.target suspend.target hibernate.target hybrid-sleep.target
 
 
-# Install and configure Zabbix
-apt install zabbix-agent -y
-sed -i 's/ServerActive=127.0.0.1/ServerActive=zabbix.healthcert.com/' /etc/zabbix/zabbix_agentd.conf
-sed -i 's/Server=127.0.0.1/Server=zabbix.healthcert.com/' /etc/zabbix/zabbix_agentd.conf
-sed -i 's/# Hostname=/Hostname='"${DESIRED_HOSTNAME}"'.healthcert.com/' /etc/zabbix/zabbix_agentd.conf
-sed -i 's/# DenyKey=system.run[*]/AllowKey=system.run[*]/' /etc/zabbix/zabbix_agentd.conf
-sed -i 's/# LogRemoteCommands=0/LogRemoteCommands=1/' /etc/zabbix/zabbix_agentd.conf
-systemctl restart zabbix-agent.service
+
 
 # Monitor authentication
 chmod g+r /var/log/auth.log
