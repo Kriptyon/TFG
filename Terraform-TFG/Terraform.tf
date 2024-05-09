@@ -182,30 +182,3 @@ resource "aws_instance" "Odoo" {
         ]
     }  
 }
-
-#blog
-
-resource "aws_instance" "Web" {
-    ami           = "ami-0776c814353b4814d" // Ubuntu server 24.04
-    instance_type = "t2.micro"
-    subnet_id     = aws_subnet.private_subnet.id
-    key_name      = "Web.pem"
-    security_groups = [aws_security_group.ssh_pn.name]
-
-    tags = {
-        Name        = "Web"
-        Departamento = "IT"
-    }
-
-    provisioner "file" {
-        source      = "Scripts/SCRIPT-WEB.sh"
-        destination = "/tmp/SCRIPT-WEB.sh"
-    }
-
-    provisioner "remote-exec" {
-        inline = [
-            "chmod +x /tmp/SCRIPT-WEB.sh",
-            "/tmp/SCRIPT-WEB.sh"
-        ]
-    }  
-}
