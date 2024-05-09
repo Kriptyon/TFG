@@ -1,0 +1,162 @@
+# Define la región donde se crearán los recursos
+provider "aws" {
+  region = "eu-west-1"
+}
+
+# Crea la VPC
+resource "aws_vpc" "RedPrivada" {
+  cidr_block = "10.0.0.0/16" # Cambia esto a tu rango de direcciones deseado
+
+  tags = {
+    Name = "RedPrivada"
+    Proyecto = "TFG"
+  }
+}
+
+# Crea una subnet pública para el bastion host
+resource "aws_subnet" "public_subnet" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.1.0/24" # Cambia esto según tus necesidades
+  availability_zone = "us-east-1a" # Cambia la zona según tus necesidades
+
+  tags = {
+    Name = "public_subnet"
+  }
+}
+
+# Crea una subnet privada para los otros servidores
+resource "aws_subnet" "private_subnet" {
+  vpc_id            = aws_vpc.my_vpc.id
+  cidr_block        = "10.0.2.0/24" # Cambia esto según tus necesidades
+  availability_zone = "us-east-1a" # Cambia la zona según tus necesidades
+
+  tags = {
+    Name = "private_subnet"
+  }
+}
+
+# Crea una tabla de ruteo
+resource "aws_route_table" "my_route_table" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.my_igw.id
+  }
+}
+
+# Asocia la tabla de ruteo con la subnet pública
+resource "aws_route_table_association" "public_route_association" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.my_route_table.id
+}
+
+# Crea una Internet Gateway para la VPC
+resource "aws_internet_gateway" "my_igw" {
+  vpc_id = aws_vpc.my_vpc.id
+
+  tags = {
+    Name = "my_igw"
+  }
+}
+
+# Crea una instancia EC2 para el bastion host
+resource "aws_instance" "bastion_host" {
+  ami             = "ami-12345678" # Cambia esto al AMI de tu elección
+  instance_type   = "t2.micro" # Cambia esto al tipo de instancia deseado
+  subnet_id       = aws_subnet.public_subnet.id
+  key_name        = "tu_key_pair" # Cambia esto a tu par de claves existente
+  associate_public_ip_address = true
+
+  tags = {
+    Name = "bastion_host"
+  }
+
+  # Proviciona y ejecuta el script en el bastion host
+  provisioner "file" {
+    source      = "scripts/bastion_setup.sh"
+    destination = "/tmp/bastion_setup.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/bastion_setup.sh",
+      "/tmp/bastion_setup.sh"
+    ]
+  }
+}
+
+# Crea una instancia EC2 para Zabbix Server
+resource "aws_instance" "zabbix_server" {
+  ami             = "ami-12345678" # Cambia esto al AMI de tu elección
+  instance_type   = "t2.micro" # Cambia esto al tipo de instancia deseado
+  subnet_id       = aws_subnet.private_subnet.id
+  key_name        = "tu_key_pair" # Cambia esto a tu par de claves existente
+
+  tags = {
+    Name = "zabbix_server"
+  }
+
+  # Proviciona y ejecuta el script en el servidor Zabbix
+  provisioner "file" {
+    source      = "scripts/zabbix_setup.sh"
+    destination = "/tmp/zabbix_setup.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/zabbix_setup.sh",
+      "/tmp/zabbix_setup.sh"
+    ]
+  }
+}
+
+# Crea una instancia EC2 para DHCP y DNS Server
+resource "aws_instance" "dhcp_dns_server" {
+  ami             = "ami-12345678" # Cambia esto al AMI de tu elección
+  instance_type   = "t2.micro" # Cambia esto al tipo de instancia deseado
+  subnet_id       = aws_subnet.private_subnet.id
+  key_name        = "tu_key_pair" # Cambia esto a tu par de claves existente
+
+  tags = {
+    Name = "dhcp_dns_server"
+  }
+
+  # Proviciona y ejecuta el script en el servidor DHCP y DNS
+  provisioner "file" {
+    source      = "scripts/dhcp_dns_setup.sh"
+    destination = "/tmp/dhcp_dns_setup.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/dhcp_dns_setup.sh",
+      "/tmp/dhcp_dns_setup.sh"
+    ]
+  }
+}
+
+# Crea una instancia EC2 para Odoo
+resource "aws_instance" "odoo_server" {
+  ami             = "ami-12345678" # Cambia esto al AMI de tu elección
+  instance_type   = "t2.micro" # Cambia esto al tipo de instancia deseado
+  subnet_id       = aws_subnet.private_subnet.id
+  key_name        = "tu_key_pair" # Cambia esto a tu par de claves existente
+
+  tags = {
+    Name = "odoo_server"
+  }
+
+  # Proviciona y ejecuta el script en el servidor Odoo
+  provisioner "file" {
+    source      = "scripts/odoo_setup.sh"
+    destination = "/tmp/odoo_setup.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/odoo_setup.sh",
+      "/tmp/odoo_setup.sh"
+    ]
+  }
+}
