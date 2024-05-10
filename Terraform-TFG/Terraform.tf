@@ -30,7 +30,7 @@ resource "aws_subnet" "private_subnet" {
     }
 }
 
-resource "aws_route_table" "tabla_route" {
+resource "aws_route_table" "public_route_table" {
     vpc_id = aws_vpc.health-cert-network.id
 
     route {
@@ -41,7 +41,7 @@ resource "aws_route_table" "tabla_route" {
 
 resource "aws_route_table_association" "public_route_association" {
     subnet_id      = aws_subnet.public_subnet.id
-    route_table_id = aws_route_table.tabla_route.id
+    route_table_id = aws_route_table.public_route_table.id
 }
 
 resource "aws_internet_gateway" "my_igw" {
@@ -50,6 +50,29 @@ resource "aws_internet_gateway" "my_igw" {
     tags = {
         Name = "Gateway"
     }
+}
+
+resource "aws_eip" "nat_eip" {
+    vpc = true
+}
+
+resource "aws_nat_gateway" "nat_gateway" {
+    allocation_id = aws_eip.nat_eip.id
+    subnet_id     = aws_subnet.public_subnet.id
+}
+
+resource "aws_route_table" "private_route_table" {
+    vpc_id = aws_vpc.health-cert-network.id
+
+    route {
+        cidr_block = "0.0.0.0/0"
+        nat_gateway_id = aws_nat_gateway.nat_gateway.id
+    }
+}
+
+resource "aws_route_table_association" "private_route_association" {
+    subnet_id      = aws_subnet.private_subnet.id
+    route_table_id = aws_route_table.private_route_table.id
 }
 
 # BASTION HOST
@@ -64,12 +87,6 @@ resource "aws_security_group" "bastion_ssh" {
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
-    ingress {
-        from_port   = 22
-        to_port     = 22
-        protocol    = "tcp"
-        security_groups = [aws_security_group.PrivateNet_ssh.id]
-    }
 }
 
 resource "aws_instance" "bastion_host" {
@@ -78,74 +95,72 @@ resource "aws_instance" "bastion_host" {
     key_name               = "Bastion_Host.pem"
     associate_public_ip_address = true
 
-  network_interface {
-    subnet_id         = aws_subnet.public_subnet.id
-    security_groups   = [aws_security_group.bastion_ssh.name]
-    device_index      = 0
-  }
+    network_interface {
+        subnet_id         = aws_subnet.public_subnet.id
+        security_groups   = [aws_security_group.bastion_ssh.name]
+        device_index      = 0
+    }
 
-  network_interface {
-    subnet_id         = aws_subnet.private_subnet.id
-    device_index      = 1
-  }
+    network_interface {
+        subnet_id         = aws_subnet.private_subnet.id
+        device_index      = 1
+    }
 
-  tags = {
-    Name        = "Bastion Host"
-    Departamento = "Seguridad"
-  }
+    tags = {
+        Name        = "Bastion Host"
+        Departamento = "Seguridad"
+    }
 
-  provisioner "file" {
-    source      = "Scripts/scriptBH.sh"
-    destination = "/tmp/scriptBH.sh"
-  }
+    provisioner "file" {
+        source      = "Scripts/scriptBH.sh"
+        destination = "/tmp/scriptBH.sh"
+    }
 
-  provisioner "remote-exec" {
-    inline = [
-      "chmod +x /tmp/scriptBH.sh",
-      "/tmp/scriptBH.sh"
-    ]
-  }  
+    provisioner "remote-exec" {
+        inline = [
+            "chmod +x /tmp/scriptBH.sh",
+            "/tmp/scriptBH.sh"
+        ]
+    }  
 }
-
 
 # Zabbix
 
-resource "aws_security_group" "Zabbix_SG" {
+resource "aws_security_group" "zabbix_sg" {
     name        = "zabbix-security-group"
-    description = "Permite SSH desde el bastion host y tráfico HTTP"
+    description = "Permite SSH desde el bastion host y tráfico HTTP y Zabbix Agent desde Odoo"
 
-    # Regla que permite SSH desde el bastion host
     ingress {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
         cidr_blocks = [aws_instance.bastion_host.public_ip]
     }
-   ingress {
-        from_port   = 22
-        to_port     = 22
-        protocol    = "tcp"
-        cidr_blocks = [aws_instance.bastion_host.public_ip]
-    }
 
-    # Regla que permite tráfico Zabbix Server a Agentes
     ingress {
         from_port   = 10050
         to_port     = 10050
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
+
+    ingress {
+        from_port   = 10050
+        to_port     = 10050
+        protocol    = "tcp"
+        security_groups = [aws_security_group.odoo_sg.id]
+    }
 }
 
-resource "aws_instance" "zabbix-srv" {
+resource "aws_instance" "zabbix_srv" {
     ami           = "ami-094025d68c6601508" // Amazon Linux 2023
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Zabbix-srv.pem"
-    security_groups = [aws_security_group.PrivateNet_ssh.name]
+    security_groups = [aws_security_group.zabbix_sg.name]
 
     tags = {
-        Name        = "Bastion Host"
+        Name        = "Zabbix Server"
         Departamento = "Seguridad"
     }
 
@@ -162,28 +177,33 @@ resource "aws_instance" "zabbix-srv" {
     }  
 }
 
-
 # ODOO
-resource "aws_security_group" "Odoo_SG" {
-    name        = "odoo-security-group"
-    description = "Permite SSH desde el bastion host y tráfico HTTP"
 
-    # Regla que permite SSH desde el bastion host
+resource "aws_security_group" "odoo_sg" {
+    name        = "odoo-security-group"
+    description = "Permite SSH desde el bastion host y tráfico HTTP y Zabbix Agent desde Zabbix"
+
     ingress {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
         cidr_blocks = [aws_instance.bastion_host.public_ip]
     }
-    
+
+    ingress {
+        from_port   = 10050
+        to_port     = 10050
+        protocol    = "tcp"
+        cidr_blocks = [aws_security_group.zabbix_sg.id]
+    }
 }
 
-resource "aws_instance" "Odoo" {
+resource "aws_instance" "odoo" {
     ami           = "ami-0776c814353b4814d" // Ubuntu server 24.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Odoo-SRV.pem"
-    security_groups = [aws_security_group.Odoo_SG.name]
+    security_groups = [aws_security_group.odoo_sg.name]
 
     tags = {
         Name        = "Odoo"
