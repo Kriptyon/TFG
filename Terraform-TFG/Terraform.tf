@@ -110,7 +110,7 @@ resource "aws_instance" "bastion_host" {
 
 # Zabbix
 
-resource "aws_security_group" "PrivateNet_ssh" {
+resource "aws_security_group" "Zabbix_SG" {
     name        = "zabbix-security-group"
     description = "Permite SSH desde el bastion host y tráfico HTTP"
 
@@ -121,9 +121,17 @@ resource "aws_security_group" "PrivateNet_ssh" {
         protocol    = "tcp"
         cidr_blocks = [aws_instance.bastion_host.public_ip]
     }
+   ingress {
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = [aws_instance.bastion_host.public_ip]
+    }
+
+    # Regla que permite tráfico Zabbix Server a Agentes
     ingress {
         from_port   = 10050
-        to_port     = 80
+        to_port     = 10050
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
@@ -156,13 +164,26 @@ resource "aws_instance" "zabbix-srv" {
 
 
 # ODOO
+resource "aws_security_group" "Odoo_SG" {
+    name        = "odoo-security-group"
+    description = "Permite SSH desde el bastion host y tráfico HTTP"
+
+    # Regla que permite SSH desde el bastion host
+    ingress {
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = [aws_instance.bastion_host.public_ip]
+    }
+    
+}
 
 resource "aws_instance" "Odoo" {
     ami           = "ami-0776c814353b4814d" // Ubuntu server 24.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Odoo-SRV.pem"
-    security_groups = [aws_security_group.PrivateNet_ssh.name]
+    security_groups = [aws_security_group.Odoo_SG.name]
 
     tags = {
         Name        = "Odoo"
