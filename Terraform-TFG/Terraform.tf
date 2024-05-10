@@ -2,18 +2,6 @@ provider "aws" {
     region = "eu-west-1"
 }
 
-resource "aws_route53_zone" "dominio_healthcert" {
-  name = "healthcert.com" 
-}
-
-resource "aws_route53_record" "registro" {
-  zone_id = aws_route53_zone.dominio_healthcert.zone_id
-  name    = "www.healthcert.com"
-  type    = "A"
-  ttl     = "300"
-  records = ["1.2.3.4"]  # Enter the IP address associated with this record
-}
-
 resource "aws_vpc" "health-cert-network" {
     cidr_block = "10.0.0.0/16"
 
@@ -66,7 +54,7 @@ resource "aws_internet_gateway" "my_igw" {
 
 # BASTION HOST
 
-resource "aws_security_group" "ssh_bh" {
+resource "aws_security_group" "bastion_ssh" {
     name        = "ssh-bastion-host-sg"
     description = "Permite SSH desde Bastion Host"
 
@@ -80,38 +68,49 @@ resource "aws_security_group" "ssh_bh" {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        security_groups = [aws_security_group.ssh_pn.id]
+        security_groups = [aws_security_group.PrivateNet_ssh.id]
     }
 }
 
 resource "aws_instance" "bastion_host" {
-    ami           = "ami-094025d68c6601508" // Amazon Linux 2023
-    instance_type = "t2.micro"
-    subnet_id     = aws_subnet.public_subnet.id
-    key_name      = "Bastion_Host.pem"
-    security_groups = [aws_security_group.ssh_bh.name]
+    ami                    = "ami-094025d68c6601508" // Amazon Linux 2023
+    instance_type          = "t2.micro"
+    key_name               = "Bastion_Host.pem"
+    associate_public_ip_address = true
 
-    tags = {
-        Name        = "Bastion Host"
-        Departamento = "Seguridad"
-    }
+  network_interface {
+    subnet_id         = aws_subnet.public_subnet.id
+    security_groups   = [aws_security_group.bastion_ssh.name]
+    device_index      = 0
+  }
 
-    provisioner "file" {
-        source      = "Scripts/scriptBH.sh"
-        destination = "/tmp/scriptBH.sh"
-    }
+  network_interface {
+    subnet_id         = aws_subnet.private_subnet.id
+    device_index      = 1
+  }
 
-    provisioner "remote-exec" {
-        inline = [
-            "chmod +x /tmp/scriptBH.sh",
-            "/tmp/scriptBH.sh"
-        ]
-    }  
+  tags = {
+    Name        = "Bastion Host"
+    Departamento = "Seguridad"
+  }
+
+  provisioner "file" {
+    source      = "Scripts/scriptBH.sh"
+    destination = "/tmp/scriptBH.sh"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "chmod +x /tmp/scriptBH.sh",
+      "/tmp/scriptBH.sh"
+    ]
+  }  
 }
+
 
 # Zabbix
 
-resource "aws_security_group" "ssh_pn" {
+resource "aws_security_group" "PrivateNet_ssh" {
     name        = "zabbix-security-group"
     description = "Permite SSH desde el bastion host y tráfico HTTP"
 
@@ -135,7 +134,7 @@ resource "aws_instance" "zabbix-srv" {
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Zabbix-srv.pem"
-    security_groups = [aws_security_group.ssh_pn.name]
+    security_groups = [aws_security_group.PrivateNet_ssh.name]
 
     tags = {
         Name        = "Bastion Host"
@@ -163,7 +162,7 @@ resource "aws_instance" "Odoo" {
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Odoo-SRV.pem"
-    security_groups = [aws_security_group.ssh_pn.name]
+    security_groups = [aws_security_group.PrivateNet_ssh.name]
 
     tags = {
         Name        = "Odoo"
