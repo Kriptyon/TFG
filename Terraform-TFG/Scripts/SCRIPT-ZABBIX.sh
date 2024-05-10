@@ -295,18 +295,6 @@ EOF
 sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
-# Telegram
-
-# Token y chat_id de Telegram
-TELEGRAM_BOT_TOKEN="6835637516:AAFCs4xax9K37Xq3p2Sgkqt_8gVjAhYhB7A"
-TELEGRAM_CHAT_ID="5089735569"
-
-# Mensaje a enviar
-MESSAGE="El script de configuración ha sido ejecutado con éxito en  $DESIRED_HOSTNAME."
-
-# Envía el mensaje utilizando la API de Telegram
-curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
-
 # Actualización de PAM
 sudo pam-auth-update --force --package pwquality
 # Instalar Zabbix Server
@@ -324,5 +312,18 @@ sudo zcat /usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz | sudo mysql -uz
 sudo mysql -e "set global log_bin_trust_function_creators = 0;"
 sudo systemctl restart zabbix-server zabbix-agent httpd
 sudo systemctl enable zabbix-server zabbix-agent httpd
+
+# Telegram
+
+# Token y chat_id de Telegram
+TELEGRAM_BOT_TOKEN="6835637516:AAFCs4xax9K37Xq3p2Sgkqt_8gVjAhYhB7A"
+TELEGRAM_CHAT_ID="5089735569"
+
+# Mensaje a enviar
+MESSAGE="El script de configuración ha sido ejecutado con éxito en  $DESIRED_HOSTNAME."
+
+# Envía el mensaje utilizando la API de Telegram
+curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
+
 
 echo "Script executed successfully."
