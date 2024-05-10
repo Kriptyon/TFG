@@ -139,13 +139,6 @@ resource "aws_security_group" "zabbix_sg" {
         protocol    = "tcp"
         cidr_blocks = ["0.0.0.0/0"]
     }
-
-    ingress {
-        from_port   = 10050
-        to_port     = 10050
-        protocol    = "tcp"
-        security_groups = [aws_security_group.odoo_sg.id]
-    }
 }
 
 resource "aws_instance" "zabbix_srv" {
@@ -188,7 +181,7 @@ resource "aws_security_group" "odoo_sg" {
         from_port   = 10050
         to_port     = 10050
         protocol    = "tcp"
-        cidr_blocks = [aws_security_group.zabbix_sg.id]
+        security_groups = [aws_security_group.zabbix_sg.id]
     }
 }
 
