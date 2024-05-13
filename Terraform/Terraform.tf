@@ -188,6 +188,28 @@ resource "aws_instance" "zabbix_srv" {
     }
 }
 
+resource "aws_security_group" "Odoo_SG" {
+    name        = "Odoo-security-group"
+    description = "Permite SSH desde el bastion host y tráfico HTTP"
+
+    # Regla que permite SSH desde el bastion host
+    ingress {
+        from_port   = 22
+        to_port     = 22
+        protocol    = "tcp"
+        cidr_blocks = [aws_instance.bastion_host.public_ip]
+    }
+
+  # Regla de egress que permite todo el tráfico saliente
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1" # Permite todo el tráfico
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+}
+
+
 resource "aws_instance" "odoo" {
     ami           = "ami-0776c814353b4814d" // Ubuntu server 24.04
     instance_type = "t2.micro"
