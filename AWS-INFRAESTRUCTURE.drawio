@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2024-05-13T08:16:10.806Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0" etag="qXhU6aGgCmyxUAcKID1v" version="24.4.0" type="github">
+<mxfile host="app.diagrams.net" modified="2024-05-15T15:43:09.062Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" etag="1Vh_LVW5UBkiC9gY_8_3" version="24.4.0" type="github">
   <diagram name="Page-1" id="H99ZJvF2B_AQA_HEOBCG">
-    <mxGraphModel dx="1674" dy="774" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+    <mxGraphModel dx="1661" dy="656" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -43,15 +43,6 @@
         <mxCell id="7TyWOzqOky9eLhuyGX8Z-33" value="&lt;div&gt;Bastion Host&lt;/div&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="7TyWOzqOky9eLhuyGX8Z-1" vertex="1">
           <mxGeometry x="305.5" y="168" width="90" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="7TyWOzqOky9eLhuyGX8Z-9" value="" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.internet_gateway;fillColor=#F58534;gradientColor=none;" parent="7TyWOzqOky9eLhuyGX8Z-1" vertex="1">
-          <mxGeometry x="316" y="-20" width="69" height="72" as="geometry" />
-        </mxCell>
-        <mxCell id="7TyWOzqOky9eLhuyGX8Z-18" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" parent="7TyWOzqOky9eLhuyGX8Z-1" source="7TyWOzqOky9eLhuyGX8Z-9" target="7TyWOzqOky9eLhuyGX8Z-4" edge="1">
-          <mxGeometry width="50" height="50" relative="1" as="geometry">
-            <mxPoint x="330.5" y="-168" as="sourcePoint" />
-            <mxPoint x="370.5" y="352.71067811865476" as="targetPoint" />
-          </mxGeometry>
-        </mxCell>
         <mxCell id="7TyWOzqOky9eLhuyGX8Z-11" value="" style="sketch=0;outlineConnect=0;fontColor=#232F3E;gradientColor=none;fillColor=#E7157B;strokeColor=none;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;fontSize=12;fontStyle=0;aspect=fixed;pointerEvents=1;shape=mxgraph.aws4.cloudwatch_logs;" parent="1" vertex="1">
           <mxGeometry x="810" y="170" width="78" height="58" as="geometry" />
         </mxCell>
@@ -74,7 +65,16 @@
           <mxGeometry x="789" y="140" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="7TyWOzqOky9eLhuyGX8Z-31" value="Internet Gateway" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" parent="1" vertex="1">
-          <mxGeometry x="320" y="200" width="110" height="30" as="geometry" />
+          <mxGeometry x="315" y="180" width="110" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="7TyWOzqOky9eLhuyGX8Z-9" value="" style="outlineConnect=0;dashed=0;verticalLabelPosition=bottom;verticalAlign=top;align=center;html=1;shape=mxgraph.aws3.internet_gateway;fillColor=#F58534;gradientColor=none;" parent="1" vertex="1">
+          <mxGeometry x="336" y="200" width="69" height="72" as="geometry" />
+        </mxCell>
+        <mxCell id="7TyWOzqOky9eLhuyGX8Z-18" value="" style="endArrow=classic;startArrow=classic;html=1;rounded=0;" parent="1" source="7TyWOzqOky9eLhuyGX8Z-9" target="7TyWOzqOky9eLhuyGX8Z-4" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="350.5" y="82" as="sourcePoint" />
+            <mxPoint x="390.5" y="602.7106781186548" as="targetPoint" />
+          </mxGeometry>
         </mxCell>
       </root>
     </mxGraphModel>
