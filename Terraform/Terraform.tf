@@ -104,6 +104,13 @@ resource "aws_security_group" "bastion_ssh" {
         protocol        = "-1"
         security_groups = [aws_security_group.private_subnet.id]
     }
+
+    egress {
+        from_port   = 0
+        to_port     = 0
+        protocol    = "-1"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
 }
 
 resource "aws_network_interface" "public" {
@@ -181,6 +188,7 @@ resource "aws_instance" "zabbix_srv" {
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Zabbix-srv"
     user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/SCRIPT-ZABBIX.sh")
+    private_ip = "10.0.2.10"
 
     tags = {
         Name        = "Zabbix Server"
@@ -190,25 +198,29 @@ resource "aws_instance" "zabbix_srv" {
 
 resource "aws_security_group" "Odoo_SG" {
     name        = "Odoo-security-group"
-    description = "Permite SSH desde el bastion host y tráfico HTTP"
+    description = "Permite SSH desde el Bastion Host y tráfico Zabbix Server"
 
-    # Regla que permite SSH desde el bastion host
     ingress {
-        from_port   = 22
+        from_port   = 22  # Puerto SSH
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = [aws_instance.bastion_host.public_ip]
+        cidr_blocks = [aws_instance.bastion_host.public_ip]  # Permitir SSH del Bastion Host
     }
 
-  # Regla de egress que permite todo el tráfico saliente
+    ingress {
+        from_port   = 10050  # Puerto Zabbix Server
+        to_port     = 10051
+        protocol    = "tcp"
+        cidr_blocks = ["10.0.2.10/32"]  # Permitir tráfico Zabbix Server (IP 10.0.2.10)
+    }
+
     egress {
         from_port   = 0
         to_port     = 0
-        protocol    = "-1" # Permite todo el tráfico
+        protocol    = "-1" # Permite todo el tráfico saliente
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
-
 
 resource "aws_instance" "odoo" {
     ami           = "ami-0776c814353b4814d" // Ubuntu server 24.04
@@ -216,6 +228,7 @@ resource "aws_instance" "odoo" {
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Odoo-SRV"
     user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/SCRIPT-ODOO17.sh")
+    private_ip = "10.0.2.20"
 
     tags = {
         Name        = "Odoo"
