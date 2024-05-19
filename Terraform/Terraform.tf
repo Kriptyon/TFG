@@ -147,14 +147,30 @@ resource "aws_instance" "bastion_host" {
 
 resource "aws_security_group" "Zabbix_SG" {
     name        = "zabbix-security-group"
-    description = "Permite SSH desde el bastion host y tráfico HTTP"
+    description = "Permite SSH desde el bastion host, tráfico HTTP/HTTPS y tráfico Zabbix"
 
     # Regla que permite SSH desde el bastion host
     ingress {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = [aws_instance.bastion_host.public_ip]
+        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]
+    }
+
+    # Regla que permite tráfico HTTP
+    ingress {
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+    }
+
+    # Regla que permite tráfico HTTPS
+    ingress {
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
     }
 
     # Regla que permite tráfico Zabbix Server a Agentes
@@ -177,7 +193,7 @@ resource "aws_security_group" "Zabbix_SG" {
     egress {
         from_port   = 0
         to_port     = 0
-        protocol    = "-1" # Permite todo el tráfico
+        protocol    = "-1"
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
@@ -198,26 +214,45 @@ resource "aws_instance" "zabbix_srv" {
 
 resource "aws_security_group" "Odoo_SG" {
     name        = "Odoo-security-group"
-    description = "Permite SSH desde el Bastion Host y tráfico Zabbix Server"
+    description = "Permite SSH desde el Bastion Host, tráfico Zabbix Server y HTTP/HTTPS"
 
+    # Regla que permite SSH desde el Bastion Host
     ingress {
-        from_port   = 22  # Puerto SSH
+        from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = [aws_instance.bastion_host.public_ip]  # Permitir SSH del Bastion Host
+        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]  # Permitir SSH desde la IP del Bastion Host
     }
 
+    # Regla que permite tráfico Zabbix Server a Agentes
     ingress {
-        from_port   = 10050  # Puerto Zabbix Server
+        from_port   = 10050
         to_port     = 10051
         protocol    = "tcp"
-        cidr_blocks = ["10.0.2.10/32"]  # Permitir tráfico Zabbix Server (IP 10.0.2.10)
+        cidr_blocks = ["10.0.2.10/24"]  # Permitir tráfico Zabbix Server desde IP 10.0.2.10
     }
 
+    # Regla que permite tráfico HTTP
+    ingress {
+        from_port   = 80
+        to_port     = 80
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]  # Permitir tráfico HTTP desde cualquier IP
+    }
+
+    # Regla que permite tráfico HTTPS
+    ingress {
+        from_port   = 443
+        to_port     = 443
+        protocol    = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]  # Permitir tráfico HTTPS desde cualquier IP
+    }
+
+    # Regla de egress que permite todo el tráfico saliente
     egress {
         from_port   = 0
         to_port     = 0
-        protocol    = "-1" # Permite todo el tráfico saliente
+        protocol    = "-1"  # Permite todo el tráfico saliente
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
