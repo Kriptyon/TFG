@@ -1,7 +1,4 @@
 #!/bin/bash
-
-# Main script
-
 # Hostnme deseado
 DESIRED_HOSTNAME="enrutador"
 
