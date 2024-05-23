@@ -239,8 +239,8 @@ resource "aws_security_group" "Web_SG" {
     }
 }
 
-resource "aws_instance" "odoo" {
-    ami           = "ami-0776c814353b4814d" // Ubuntu server 24.04
+resource "aws_instance" "Web-SRV" {
+    ami           = "ami-0607a9783dd204cae" // Ubuntu server 22.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Odoo-SRV"
@@ -255,16 +255,16 @@ resource "aws_instance" "odoo" {
 
 resource "aws_docdb_cluster" "hcdb_cluster" {
   cluster_identifier        = "hcdb-cluster"
-  instance_class            = "db.t3.medium"
+  instance_class            = "db.t3.micro"
   engine_version            = "4.0.0"
-  master_username           = "admin"
-  master_password           = "YourStrongPassword"
+  master_username           = "HCDB_Admin"
+  master_password           = "Contraseña123"
   preferred_backup_window   = "07:00-09:00"
   skip_final_snapshot       = true
   storage_encrypted         = true
   apply_immediately         = true
 
-  vpc_security_group_ids    = [aws_security_group.Web_SG.id] # Assuming this SG allows traffic to DocumentDB
+  vpc_security_group_ids    = [aws_security_group.Web_SG.id] 
 
   tags = {
     Name = "HCDB"
