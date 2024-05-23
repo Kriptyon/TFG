@@ -137,7 +137,7 @@ resource "aws_instance" "bastion_host" {
         device_index         = 1
     }
 
-    user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/scriptBH.sh")
+    user_data     = file("C:\Users\sebsg\OneDrive - Conselleria d'Educació\Escritorio\TFG-AWS\TFG\Terraform\ScriptsscriptBH.sh")
 
     tags = {
         Name        = "Bastion Host"
@@ -183,7 +183,7 @@ resource "aws_instance" "zabbix_srv" {
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Zabbix-srv"
-    user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/SCRIPT-ZABBIX.sh")
+    user_data     = file("C:\Users\sebsg\OneDrive - Conselleria d'Educació\Escritorio\TFG-AWS\TFG\Terraform\ScriptsSCRIPT-ZABBIX.sh")
     private_ip = "10.0.2.10"
 
     tags = {
@@ -243,8 +243,8 @@ resource "aws_instance" "Web-SRV" {
     ami           = "ami-0607a9783dd204cae" // Ubuntu server 22.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
-    key_name      = "Odoo-SRV"
-    user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/SCRIPT-WEB.sh")
+    key_name      = "Web-SRV"
+    user_data     = file("C:\Users\sebsg\OneDrive - Conselleria d'Educació\Escritorio\TFG-AWS\TFG\Terraform\ScriptsSCRIPT-WEB.sh")
     private_ip = "10.0.2.20"
 
     tags = {
