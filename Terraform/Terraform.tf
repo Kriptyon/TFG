@@ -147,9 +147,8 @@ resource "aws_instance" "bastion_host" {
 
 resource "aws_security_group" "Zabbix_SG" {
     name        = "zabbix-security-group"
-    description = "Permite SSH desde el bastion host, tráfico HTTP/HTTPS y tráfico Zabbix"
+    description = "Permite SSH desde el bastion host, trÃ¡fico HTTP/HTTPS y trÃ¡fico Zabbix"
 
-    # Regla que permite SSH desde el bastion host
     ingress {
         from_port   = 22
         to_port     = 22
@@ -157,23 +156,6 @@ resource "aws_security_group" "Zabbix_SG" {
         cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]
     }
 
-    # Regla que permite tráfico HTTP
-    ingress {
-        from_port   = 80
-        to_port     = 80
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    # Regla que permite tráfico HTTPS
-    ingress {
-        from_port   = 443
-        to_port     = 443
-        protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
-    }
-
-    # Regla que permite tráfico Zabbix Server a Agentes
     ingress {
         from_port   = 10050
         to_port     = 10050
@@ -181,7 +163,6 @@ resource "aws_security_group" "Zabbix_SG" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    # Regla que permite tráfico Agentes a Zabbix Server
     ingress {
         from_port   = 10051
         to_port     = 10051
@@ -189,7 +170,6 @@ resource "aws_security_group" "Zabbix_SG" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    # Regla de egress que permite todo el tráfico saliente
     egress {
         from_port   = 0
         to_port     = 0
@@ -214,45 +194,47 @@ resource "aws_instance" "zabbix_srv" {
 
 resource "aws_security_group" "Web_SG" {
     name        = "web-security-group"
-    description = "Permite SSH desde el Bastion Host, tráfico Zabbix Server y HTTP/HTTPS"
+    description = "Permite SSH desde el Bastion Host, trÃ¡fico Zabbix Server y HTTP/HTTPS"
 
-    # Regla que permite SSH desde el Bastion Host
     ingress {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]  # Permitir SSH desde la IP del Bastion Host
+        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]
     }
 
-    # Regla que permite tráfico Zabbix Server a Agentes
     ingress {
         from_port   = 10050
         to_port     = 10051
         protocol    = "tcp"
-        cidr_blocks = ["10.0.2.10/24"]  # Permitir tráfico Zabbix Server desde IP 10.0.2.10
+        cidr_blocks = ["10.0.2.10/32"]  # Permitir trÃ¡fico Zabbix Server desde IP 10.0.2.10
     }
 
-    # Regla que permite tráfico HTTP
+    ingress {
+        from_port   = 27017  # Puerto por defecto de DocumentDB
+        to_port     = 27017
+        protocol    = "tcp"
+        security_groups = [aws_security_group.zabbix-security-group.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
+    }
+
     ingress {
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]  # Permitir tráfico HTTP desde cualquier IP
+        cidr_blocks = ["0.0.0.0/0"]  # Permitir trÃ¡fico HTTP desde cualquier IP
     }
 
-    # Regla que permite tráfico HTTPS
     ingress {
         from_port   = 443
         to_port     = 443
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]  # Permitir tráfico HTTPS desde cualquier IP
+        cidr_blocks = ["0.0.0.0/0"]  # Permitir trÃ¡fico HTTPS desde cualquier IP
     }
 
-    # Regla de egress que permite todo el tráfico saliente
     egress {
         from_port   = 0
         to_port     = 0
-        protocol    = "-1"  # Permite todo el tráfico saliente
+        protocol    = "-1"  # Permite todo el trÃ¡fico saliente
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
@@ -270,3 +252,23 @@ resource "aws_instance" "odoo" {
         Departamento = "IT"
     }
 }
+
+resource "aws_docdb_cluster" "hcdb_cluster" {
+  cluster_identifier        = "hcdb-cluster"
+  instance_class            = "db.t3.medium"
+  engine_version            = "4.0.0"
+  master_username           = "admin"
+  master_password           = "YourStrongPassword"
+  preferred_backup_window   = "07:00-09:00"
+  skip_final_snapshot       = true
+  storage_encrypted         = true
+  apply_immediately         = true
+
+  vpc_security_group_ids    = [aws_security_group.Web_SG.id] # Assuming this SG allows traffic to DocumentDB
+
+  tags = {
+    Name = "HCDB"
+  }
+}
+
+  
