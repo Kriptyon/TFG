@@ -147,7 +147,7 @@ resource "aws_instance" "bastion_host" {
 
 resource "aws_security_group" "Zabbix_SG" {
     name        = "zabbix-security-group"
-    description = "Permite SSH desde el bastion host, trÃ¡fico HTTP/HTTPS y trÃ¡fico Zabbix"
+    description = "Permite SSH desde el bastion host, tráfico HTTP/HTTPS y tráfico Zabbix"
 
     ingress {
         from_port   = 22
@@ -194,7 +194,7 @@ resource "aws_instance" "zabbix_srv" {
 
 resource "aws_security_group" "Web_SG" {
     name        = "web-security-group"
-    description = "Permite SSH desde el Bastion Host, trÃ¡fico Zabbix Server y HTTP/HTTPS"
+    description = "Permite SSH desde el Bastion Host, tráfico Zabbix Server y HTTP/HTTPS"
 
     ingress {
         from_port   = 22
@@ -207,7 +207,7 @@ resource "aws_security_group" "Web_SG" {
         from_port   = 10050
         to_port     = 10051
         protocol    = "tcp"
-        cidr_blocks = ["10.0.2.10/32"]  # Permitir trÃ¡fico Zabbix Server desde IP 10.0.2.10
+        cidr_blocks = ["10.0.2.10/32"]  # Permitir tráfico Zabbix Server desde IP 10.0.2.10
     }
 
     ingress {
@@ -221,20 +221,20 @@ resource "aws_security_group" "Web_SG" {
         from_port   = 80
         to_port     = 80
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]  # Permitir trÃ¡fico HTTP desde cualquier IP
+        cidr_blocks = ["0.0.0.0/0"]  # Permitir tráfico HTTP desde cualquier IP
     }
 
     ingress {
         from_port   = 443
         to_port     = 443
         protocol    = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]  # Permitir trÃ¡fico HTTPS desde cualquier IP
+        cidr_blocks = ["0.0.0.0/0"]  # Permitir tráfico HTTPS desde cualquier IP
     }
 
     egress {
         from_port   = 0
         to_port     = 0
-        protocol    = "-1"  # Permite todo el trÃ¡fico saliente
+        protocol    = "-1"  # Permite todo el tráfico saliente
         cidr_blocks = ["0.0.0.0/0"]
     }
 }
