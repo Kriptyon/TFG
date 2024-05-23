@@ -1,6 +1,6 @@
 #!/bin/bash
 # Hostnme deseado
-DESIRED_HOSTNAME="enrutador"
+DESIRED_HOSTNAME="ZABBIX-SRV"
 
 # Función para checkear si una contraseña pasa los requerimientos
 check_password() {
