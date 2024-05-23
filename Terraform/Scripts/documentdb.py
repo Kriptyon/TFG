@@ -95,4 +95,4 @@ for _ in range(100):
     }
     citas_medicas.insert_one(cita)
 
-print("Script de generación de datos aleatorios ejecutado con éxito")
+print("Script de generación de datos aleatorios en HealthCert ejecutado con éxito")

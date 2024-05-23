@@ -294,26 +294,7 @@ EOF
 sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
-#ODOO
-#apt install postgresql -y
-#systemctl status postgresql
-#echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee
-#/etc/apt/sources.list.d/focal-security.list
-#apt update
-#apt install libssl1.1
-#cd /opt
-#wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-
-#1/wkhtmltox_0.12.6-1.bionic_amd64.deb
-#dpkg -i wkhtmltox_0.12.6-1.bionic_amd64.deb
-#cp /usr/local/bin/wkhtmltoimage /usr/bin/wkhtmltoimage
-#cp /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
-#wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o
-#/usr/share/keyrings/odoo-archive-keyring.gpg
-#echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg]
-#https://nightly.odoo.com/17.0/nightly/deb/ ./' | sudo tee
-#/etc/apt/sources.list.d/odoo.list
-#apt update
-#apt install odoo -y
+
 
 #Zabbix Agent
 
@@ -340,7 +321,13 @@ sudo systemctl status zabbix-agent
 # Actualización de PAM
 sudo pam-auth-update --force --package pwquality
 
-#DocumentDB
+#APACHE
+sudo apt update
+sudo apt install -y apache2
+sudo systemctl enable apache2
+sudo systemctl start apache2
+sudo ufw allow 'Apache Full'
+sudo systemctl status apache2
 
 # Telegram
 
