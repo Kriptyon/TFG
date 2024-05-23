@@ -212,8 +212,8 @@ resource "aws_instance" "zabbix_srv" {
     }
 }
 
-resource "aws_security_group" "Odoo_SG" {
-    name        = "Odoo-security-group"
+resource "aws_security_group" "Web_SG" {
+    name        = "web-security-group"
     description = "Permite SSH desde el Bastion Host, tráfico Zabbix Server y HTTP/HTTPS"
 
     # Regla que permite SSH desde el Bastion Host
@@ -262,11 +262,11 @@ resource "aws_instance" "odoo" {
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Odoo-SRV"
-    user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/SCRIPT-ODOO17.sh")
+    user_data     = file("/home/kpt/TFG/Terraform-TFG/Scripts/SCRIPT-WEB.sh")
     private_ip = "10.0.2.20"
 
     tags = {
-        Name        = "Odoo"
+        Name        = "Web"
         Departamento = "IT"
     }
 }

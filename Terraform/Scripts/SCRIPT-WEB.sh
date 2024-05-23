@@ -3,7 +3,7 @@
 # Main script
 
 # Hostnme deseado
-DESIRED_HOSTNAME="Odoo-Srv"
+DESIRED_HOSTNAME="Web-SRV"
 
 # Función para checkear si una contraseña pasa los requerimientos
 check_password() {
@@ -295,29 +295,52 @@ sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
 #ODOO
-apt install postgresql -y
-systemctl status postgresql
-echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee
-/etc/apt/sources.list.d/focal-security.list
-apt update
-apt install libssl1.1
-cd /opt
-wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-
-1/wkhtmltox_0.12.6-1.bionic_amd64.deb
-dpkg -i wkhtmltox_0.12.6-1.bionic_amd64.deb
-cp /usr/local/bin/wkhtmltoimage /usr/bin/wkhtmltoimage
-cp /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
-wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o
-/usr/share/keyrings/odoo-archive-keyring.gpg
-echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg]
-https://nightly.odoo.com/17.0/nightly/deb/ ./' | sudo tee
-/etc/apt/sources.list.d/odoo.list
-apt update
-apt install odoo -y
+#apt install postgresql -y
+#systemctl status postgresql
+#echo "deb http://security.ubuntu.com/ubuntu focal-security main" | sudo tee
+#/etc/apt/sources.list.d/focal-security.list
+#apt update
+#apt install libssl1.1
+#cd /opt
+#wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6-
+#1/wkhtmltox_0.12.6-1.bionic_amd64.deb
+#dpkg -i wkhtmltox_0.12.6-1.bionic_amd64.deb
+#cp /usr/local/bin/wkhtmltoimage /usr/bin/wkhtmltoimage
+#cp /usr/local/bin/wkhtmltopdf /usr/bin/wkhtmltopdf
+#wget -q -O - https://nightly.odoo.com/odoo.key | sudo gpg --dearmor -o
+#/usr/share/keyrings/odoo-archive-keyring.gpg
+#echo 'deb [signed-by=/usr/share/keyrings/odoo-archive-keyring.gpg]
+#https://nightly.odoo.com/17.0/nightly/deb/ ./' | sudo tee
+#/etc/apt/sources.list.d/odoo.list
+#apt update
+#apt install odoo -y
 
 #Zabbix Agent
 
+# Actualizar el sistema
+sudo apt update
+sudo apt upgrade -y
 
+# Instalar el paquete Zabbix Agent
+sudo apt install -y zabbix-agent
+
+# Configurar el archivo de configuración del Zabbix Agent
+sudo cp /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.backup  # Realiza una copia de seguridad del archivo de configuración original
+
+sudo sed -i 's/^Server=.*/Server=10.0.2.10/' /etc/zabbix/zabbix_agentd.conf  # Configura el parámetro Server con la IP del servidor Zabbix
+
+# Opcionalmente, puedes configurar otros parámetros aquí
+
+# Reiniciar el servicio del agente Zabbix
+sudo systemctl restart zabbix-agent
+
+# Verificar el estado del servicio
+sudo systemctl status zabbix-agent
+
+# Actualización de PAM
+sudo pam-auth-update --force --package pwquality
+
+#DocumentDB
 
 # Telegram
 
@@ -328,10 +351,8 @@ TELEGRAM_CHAT_ID="5089735569"
 # Mensaje a enviar
 MESSAGE="El script de configuración ha sido ejecutado con éxito en  $DESIRED_HOSTNAME."
 
+
 # Envía el mensaje utilizando la API de Telegram
 curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
-
-# Actualización de PAM
-sudo pam-auth-update --force --package pwquality
 
 echo "Script executed successfully."
