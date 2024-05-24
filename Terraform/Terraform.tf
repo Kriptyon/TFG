@@ -279,3 +279,16 @@ resource "aws_docdb_cluster" "hcdb_cluster" {
     Name = "HCDB"
   }
 }
+
+resource "aws_cloudwatch_log_group" "logs_cw" {
+  name              = "/var/log/health_cert"
+  retention_in_days = 30
+}
+
+resource "aws_cloudwatch_log_subscription_filter" "instance_logs_subscription" {
+  name            = "instance_logs_subscription"
+  log_group_name = aws_cloudwatch_log_group.logs_cw.name
+  filter_pattern = ""
+
+  destination_arn = aws_cloudwatch_log_group.logs_cw.arn
+}
