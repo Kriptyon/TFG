@@ -179,7 +179,7 @@ resource "aws_security_group" "Zabbix_SG" {
 }
 
 resource "aws_instance" "zabbix_srv" {
-    ami           = "ami-0dfdc165e7af15242" // Amazon Linux 2023
+    ami           = "ami-0607a9783dd204cae" // Ubuntu server 22.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Zabbix-srv"
