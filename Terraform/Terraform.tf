@@ -137,7 +137,7 @@ resource "aws_instance" "bastion_host" {
         device_index         = 1
     }
 
-    user_data     = file("C:\Users\sebsg\OneDrive - Conselleria d'Educació\Escritorio\TFG-AWS\TFG\Terraform\ScriptsscriptBH.sh")
+    user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/scriptBH.sh")
 
     tags = {
         Name        = "Bastion Host"
@@ -153,7 +153,7 @@ resource "aws_security_group" "Zabbix_SG" {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]
+        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/32"]
     }
 
     ingress {
@@ -183,8 +183,9 @@ resource "aws_instance" "zabbix_srv" {
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Zabbix-srv"
-    user_data     = file("C:\Users\sebsg\OneDrive - Conselleria d'Educació\Escritorio\TFG-AWS\TFG\Terraform\ScriptsSCRIPT-ZABBIX.sh")
-    private_ip = "10.0.2.10"
+    user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/SCRIPT-ZABBIX.sh")
+    private_ip    = "10.0.2.10"
+    security_groups = [aws_security_group.Zabbix_SG.id]
 
     tags = {
         Name        = "Zabbix Server"
@@ -200,11 +201,18 @@ resource "aws_security_group" "Web_SG" {
         from_port   = 22
         to_port     = 22
         protocol    = "tcp"
-        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/24"]
+        cidr_blocks = ["${aws_instance.bastion_host.public_ip}/32"]
     }
 
     ingress {
         from_port   = 10050
+        to_port     = 10050
+        protocol    = "tcp"
+        cidr_blocks = ["10.0.2.10/32"]  # Permitir tráfico Zabbix Server desde IP 10.0.2.10
+    }
+
+    ingress {
+        from_port   = 10051
         to_port     = 10051
         protocol    = "tcp"
         cidr_blocks = ["10.0.2.10/32"]  # Permitir tráfico Zabbix Server desde IP 10.0.2.10
@@ -214,7 +222,7 @@ resource "aws_security_group" "Web_SG" {
         from_port   = 27017  # Puerto por defecto de DocumentDB
         to_port     = 27017
         protocol    = "tcp"
-        security_groups = [aws_security_group.zabbix-security-group.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
+        security_groups = [aws_security_group.Zabbix_SG.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
     }
 
     ingress {
@@ -244,8 +252,9 @@ resource "aws_instance" "Web-SRV" {
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Web-SRV"
-    user_data     = file("C:\Users\sebsg\OneDrive - Conselleria d'Educació\Escritorio\TFG-AWS\TFG\Terraform\ScriptsSCRIPT-WEB.sh")
-    private_ip = "10.0.2.20"
+    user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/SCRIPT-WEB.sh")
+    private_ip    = "10.0.2.20"
+    security_groups = [aws_security_group.Web_SG.id]
 
     tags = {
         Name        = "Web"
@@ -270,5 +279,3 @@ resource "aws_docdb_cluster" "hcdb_cluster" {
     Name = "HCDB"
   }
 }
-
-  
