@@ -215,8 +215,9 @@ resource "aws_security_group" "web_sg" {
         from_port   = 27017  # Puerto por defecto de DocumentDB
         to_port     = 27017
         protocol    = "tcp"
-        security_groups = [aws_security_group.zabbix_sg.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
-    }
+    security_groups = [aws_security_group.zabbix_sg.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
+}
+
     ingress {
         from_port   = 80
         to_port     = 80
@@ -276,10 +277,29 @@ resource "aws_cloudwatch_log_group" "logs_cw" {
     retention_in_days = 30
 }
 
+resource "aws_iam_role" "cloudwatch_logs_role" {
+  name               = "cloudwatch_logs_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Principal = {
+        Service = "logs.amazonaws.com"
+      }
+      Action    = "sts:AssumeRole"
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "cloudwatch_logs_policy_attachment" {
+  role       = aws_iam_role.cloudwatch_logs_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}
+
 resource "aws_cloudwatch_log_subscription_filter" "instance_logs_subscription" {
     name            = "instance_logs_subscription"
     log_group_name = aws_cloudwatch_log_group.logs_cw.name
     filter_pattern = ""
-
     destination_arn = aws_cloudwatch_log_group.logs_cw.arn
+    role_arn       = aws_iam_role.cloudwatch_logs_role.arn
 }
