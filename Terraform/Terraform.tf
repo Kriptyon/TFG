@@ -102,7 +102,10 @@ resource "aws_security_group" "bastion_ssh" {
         from_port       = 0
         to_port         = 0
         protocol        = "-1"
-        security_groups = [aws_security_group.private_subnet.id]
+        security_groups = [
+            aws_security_group.Zabbix_SG.id
+            aws_security_group.Web_SG.id
+            ]
     }
 
     egress {
