@@ -98,16 +98,6 @@ resource "aws_security_group" "bastion_ssh" {
         cidr_blocks = ["0.0.0.0/0"]
     }
 
-    ingress {
-        from_port       = 0
-        to_port         = 0
-        protocol        = "-1"
-        security_groups = [
-            aws_security_group.Zabbix_SG.id,
-            aws_security_group.Web_SG.id
-            ]
-    }
-
     egress {
         from_port   = 0
         to_port     = 0
@@ -148,7 +138,7 @@ resource "aws_instance" "bastion_host" {
     }
 }
 
-resource "aws_security_group" "Zabbix_SG" {
+resource "aws_security_group" "zabbix_sg" {
     name        = "zabbix-security-group"
     description = "Permite SSH desde el bastion host, tráfico HTTP/HTTPS y tráfico Zabbix"
 
@@ -188,7 +178,7 @@ resource "aws_instance" "zabbix_srv" {
     key_name      = "Zabbix-srv"
     user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/SCRIPT-ZABBIX.sh")
     private_ip    = "10.0.2.10"
-    security_groups = [aws_security_group.Zabbix_SG.id]
+    security_groups = [aws_security_group.zabbix_sg.id]
 
     tags = {
         Name        = "Zabbix Server"
@@ -196,7 +186,7 @@ resource "aws_instance" "zabbix_srv" {
     }
 }
 
-resource "aws_security_group" "Web_SG" {
+resource "aws_security_group" "web_sg" {
     name        = "web-security-group"
     description = "Permite SSH desde el Bastion Host, tráfico Zabbix Server y HTTP/HTTPS"
 
@@ -225,8 +215,7 @@ resource "aws_security_group" "Web_SG" {
         from_port   = 27017  # Puerto por defecto de DocumentDB
         to_port     = 27017
         protocol    = "tcp"
-        security_groups = [aws_security_group.Zabbix_SG.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
-    }
+        security_groups = [aws_security_group.zabbix_sg.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
 
     ingress {
         from_port   = 80
@@ -250,14 +239,14 @@ resource "aws_security_group" "Web_SG" {
     }
 }
 
-resource "aws_instance" "Web-SRV" {
+resource "aws_instance" "web_srv" {
     ami           = "ami-0607a9783dd204cae" // Ubuntu server 22.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
     key_name      = "Web-SRV"
     user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/SCRIPT-WEB.sh")
     private_ip    = "10.0.2.20"
-    security_groups = [aws_security_group.Web_SG.id]
+    security_groups = [aws_security_group.web_sg.id]
 
     tags = {
         Name        = "Web"
@@ -266,32 +255,32 @@ resource "aws_instance" "Web-SRV" {
 }
 
 resource "aws_docdb_cluster" "hcdb_cluster" {
-  cluster_identifier        = "hcdb-cluster"
-  instance_class            = "db.t3.micro"
-  engine_version            = "4.0.0"
-  master_username           = "HCDB_Admin"
-  master_password           = "Contraseña123"
-  preferred_backup_window   = "07:00-09:00"
-  skip_final_snapshot       = true
-  storage_encrypted         = true
-  apply_immediately         = true
+    cluster_identifier        = "hcdb-cluster"
+    instance_class            = "db.t3.micro"
+    engine_version            = "4.0.0"
+    master_username           = "HCDB_Admin"
+    master_password           = "Contraseña123"
+    preferred_backup_window   = "07:00-09:00"
+    skip_final_snapshot       = true
+    storage_encrypted         = true
+    apply_immediately         = true
 
-  vpc_security_group_ids    = [aws_security_group.Web_SG.id] 
+    vpc_security_group_ids    = [aws_security_group.web_sg.id] 
 
-  tags = {
-    Name = "HCDB"
-  }
+    tags = {
+        Name = "HCDB"
+    }
 }
 
 resource "aws_cloudwatch_log_group" "logs_cw" {
-  name              = "/var/log/health_cert"
-  retention_in_days = 30
+    name              = "/var/log/health_cert"
+    retention_in_days = 30
 }
 
 resource "aws_cloudwatch_log_subscription_filter" "instance_logs_subscription" {
-  name            = "instance_logs_subscription"
-  log_group_name = aws_cloudwatch_log_group.logs_cw.name
-  filter_pattern = ""
+    name            = "instance_logs_subscription"
+    log_group_name = aws_cloudwatch_log_group.logs_cw.name
+    filter_pattern = ""
 
-  destination_arn = aws_cloudwatch_log_group.logs_cw.arn
+    destination_arn = aws_cloudwatch_log_group.logs_cw.arn
 }
