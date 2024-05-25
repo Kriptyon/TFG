@@ -103,7 +103,7 @@ resource "aws_security_group" "bastion_ssh" {
         to_port         = 0
         protocol        = "-1"
         security_groups = [
-            aws_security_group.Zabbix_SG.id
+            aws_security_group.Zabbix_SG.id,
             aws_security_group.Web_SG.id
             ]
     }
