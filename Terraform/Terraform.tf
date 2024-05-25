@@ -118,7 +118,7 @@ resource "aws_network_interface" "private" {
 resource "aws_instance" "bastion_host" {
     ami           = "ami-0dfdc165e7af15242" // Amazon Linux 2023
     instance_type = "t2.micro"
-    key_name      = "Bastion_Host"
+    key_name      = "Keys/Bastion_Host"
 
     network_interface {
         network_interface_id = aws_network_interface.public.id
@@ -175,7 +175,7 @@ resource "aws_instance" "zabbix_srv" {
     ami           = "ami-0607a9783dd204cae" // Ubuntu server 22.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
-    key_name      = "Zabbix-srv"
+    key_name      = "Keys/Zabbix-srv"
     user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/SCRIPT-ZABBIX.sh")
     private_ip    = "10.0.2.10"
     security_groups = [aws_security_group.zabbix_sg.id]
@@ -244,7 +244,7 @@ resource "aws_instance" "web_srv" {
     ami           = "ami-0607a9783dd204cae" // Ubuntu server 22.04
     instance_type = "t2.micro"
     subnet_id     = aws_subnet.private_subnet.id
-    key_name      = "Web-SRV"
+    key_name      = "Keys/Web-SRV"
     user_data     = file("C:/Users/sebsg/Desktop/HealthCert/Scripts/SCRIPT-WEB.sh")
     private_ip    = "10.0.2.20"
     security_groups = [aws_security_group.web_sg.id]
