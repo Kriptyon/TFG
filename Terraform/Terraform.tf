@@ -255,21 +255,20 @@ resource "aws_instance" "web_srv" {
 }
 
 resource "aws_docdb_cluster" "hcdb_cluster" {
-    cluster_identifier        = "hcdb-cluster"
-    instance_type            = "db.t3.micro"
-    engine_version            = "4.0.0"
-    master_username           = "HCDB_Admin"
-    master_password           = "Contraseña123"
-    preferred_backup_window   = "07:00-09:00"
-    skip_final_snapshot       = true
-    storage_encrypted         = true
-    apply_immediately         = true
+  cluster_identifier        = "hcdb-cluster"
+  engine_version            = "4.0.0"
+  master_username           = "HCDB_Admin"
+  master_password           = "Contraseña123"
+  preferred_backup_window   = "07:00-09:00"
+  skip_final_snapshot       = true
+  storage_encrypted         = true
+  apply_immediately         = true
 
-    vpc_security_group_ids    = [aws_security_group.web_sg.id] 
+  vpc_security_group_ids    = [aws_security_group.web_sg.id] 
 
-    tags = {
-        Name = "HCDB"
-    }
+  tags = {
+    Name = "HCDB"
+  }
 }
 
 resource "aws_cloudwatch_log_group" "logs_cw" {
