@@ -256,7 +256,7 @@ resource "aws_instance" "web_srv" {
 
 resource "aws_docdb_cluster" "hcdb_cluster" {
     cluster_identifier        = "hcdb-cluster"
-    instance_class            = "db.t3.micro"
+    instance_type            = "db.t3.micro"
     engine_version            = "4.0.0"
     master_username           = "HCDB_Admin"
     master_password           = "Contraseña123"
