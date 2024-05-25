@@ -216,7 +216,7 @@ resource "aws_security_group" "web_sg" {
         to_port     = 27017
         protocol    = "tcp"
         security_groups = [aws_security_group.zabbix_sg.id]  # Permitir acceso desde el grupo de seguridad de Zabbix
-
+    }
     ingress {
         from_port   = 80
         to_port     = 80
