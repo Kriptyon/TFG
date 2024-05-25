@@ -113,6 +113,10 @@ resource "aws_network_interface" "public" {
 resource "aws_network_interface" "private" {
     subnet_id       = aws_subnet.private_subnet.id
     security_groups = [aws_security_group.bastion_ssh.id]
+
+    depends_on = [
+        aws_security_group.bastion_ssh
+    ]
 }
 
 resource "aws_instance" "bastion_host" {
