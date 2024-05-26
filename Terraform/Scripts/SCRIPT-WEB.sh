@@ -294,7 +294,11 @@ EOF
 sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
-
+#SSH
+sudo apt install -y ssh
+sudo systemctl enable ssh
+sudo systemctl start ssh
+sudo systemctl restart ssh
 
 #Zabbix Agent
 
