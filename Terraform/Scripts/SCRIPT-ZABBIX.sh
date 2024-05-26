@@ -32,10 +32,10 @@ check_password() {
 }
 
 echo "@@@@@@ $DESIRED_HOSTNAME @@@@@@"
-yum update -y
+apt update -y
 
 # Prevents the popup of udisks2.service and automates the restart of it
-sudo NEEDRESTART_MODE=a yum dist-upgrade --assumeyes
+sudo NEEDRESTART_MODE=a apt dist-upgrade --assumeyes
 
 
 # Configure the hostname of the instance
@@ -49,7 +49,7 @@ fi
 #PAM
 # Password Complexity (Using PAM modules)
 # Install necessary packages
-yum install libpam-pwquality -y
+apt install libpam-pwquality -y
 
 # Configure PAM
 sed -i '/pam_pwquality.so/d' /etc/pam.d/common-password
@@ -294,21 +294,51 @@ create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
 # Actualización de PAM
 sudo pam-auth-update --force --package pwquality
-# Instalar Zabbix Server
-sudo yum install -y wget mysql-server
-sudo wget https://repo.zabbix.com/zabbix/6.3/rhel/8/x86_64/zabbix-release-6.3-3.el8.noarch.rpm
-sudo rpm -ivh zabbix-release-6.3-3.el8.noarch.rpm
-sudo yum update -y
-sudo yum install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
-sudo systemctl start mysqld
-sudo mysql -e "create database zabbix character set utf8mb4 collate utf8mb4_bin;"
-sudo mysql -e "create user zabbix@localhost identified by 'sebas';"
-sudo mysql -e "grant all privileges on zabbix.* to zabbix@localhost;"
-sudo mysql -e "set global log_bin_trust_function_creators = 1;"
-sudo zcat /usr/share/doc/zabbix-sql-scripts/mysql/create.sql.gz | sudo mysql -uzabbix -p zabbix
-sudo mysql -e "set global log_bin_trust_function_creators = 0;"
-sudo systemctl restart zabbix-server zabbix-agent httpd
-sudo systemctl enable zabbix-server zabbix-agent httpd
+
+#SSH
+sudo apt install -y ssh
+sudo systemctl enable ssh
+sudo systemctl start ssh
+sudo systemctl restart ssh
+#INSTALAR ZABBIX SERVER
+# Variables
+DB_NAME="zabbix_HC"
+DB_USER="s.garcia_HC"
+DB_PASS="43]iO_eGya(rP,U"
+ZBX_SERVER_IP="127.0.0.1"
+TIMEZONE="Europe/Madrid"
+sudo apt update
+sudo apt -y upgrade
+sudo apt -y install wget gnupg2
+wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
+sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+sudo apt update
+sudo apt -y install zabbix-server-pgsql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent postgresql
+sudo -i -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
+sudo -i -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
+sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+zcat /usr/share/doc/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u postgres psql ${DB_NAME}
+sudo sed -i "s/# DBPassword=/DBPassword=${DB_PASS}/" /etc/zabbix/zabbix_server.conf
+sudo systemctl restart zabbix-server zabbix-agent
+sudo systemctl enable zabbix-server zabbix-agent
+sudo sed -i "s/^;date.timezone =$/date.timezone = ${TIMEZONE}/" /etc/php/*/apache2/php.ini
+sudo systemctl restart apache2
+sudo tee /etc/zabbix/web/zabbix.conf.php <<EOL
+<?php
+// Zabbix GUI configuration file.
+\$DB['TYPE'] = 'POSTGRESQL';
+\$DB['SERVER'] = 'localhost';
+\$DB['PORT'] = '5432';
+\$DB['DATABASE'] = '${DB_NAME}';
+\$DB['USER'] = '${DB_USER}';
+\$DB['PASSWORD'] = '${DB_PASS}';
+\$DB['SCHEMA'] = '';
+\$ZBX_SERVER = '${ZBX_SERVER_IP}';
+\$ZBX_SERVER_PORT = '10051';
+\$ZBX_SERVER_NAME = 'Zabbix Server';
+\$IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;
+?>
+EOL
 
 # Telegram
 
