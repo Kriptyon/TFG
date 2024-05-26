@@ -339,12 +339,39 @@ create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
 #Zabbix
 
-sudo rpm -Uvh https://repo.zabbix.com/zabbix/5.0/rhel/7/x86_64/zabbix-release-5.0-1.el7.noarch.rpm
-sudo yum install zabbix-agent -y
-ZABBIX_SERVER="tu.dirección.ip.del.servidor.zabbix"
-sudo sed -i "s/Server=127.0.0.1/Server=$ZABBIX_SERVER/g" /etc/zabbix/zabbix_agentd.conf
-sudo systemctl start zabbix-agent
+# Variables
+ZABBIX_VERSION="6.0"  # Specify the Zabbix version you want to install
+ZABBIX_SERVER_IP="10.0.2.10"  # Replace with the IP address of your Zabbix server
+
+# Update the system
+sudo yum update -y
+
+# Install prerequisites
+sudo yum install -y wget
+
+# Download the Zabbix repository package
+wget https://repo.zabbix.com/zabbix/$ZABBIX_VERSION/rhel/9/x86_64/zabbix-release-$ZABBIX_VERSION-1.el9.noarch.rpm
+
+# Install the Zabbix repository
+sudo rpm -Uvh zabbix-release-$ZABBIX_VERSION-1.el9.noarch.rpm
+
+# Clean the repository cache
+sudo yum clean all
+
+# Install the Zabbix agent
+sudo yum install -y zabbix-agent
+
+# Configure the Zabbix agent
+sudo sed -i "s/^Server=.*/Server=$ZABBIX_SERVER_IP/" /etc/zabbix/zabbix_agentd.conf
+sudo sed -i "s/^ServerActive=.*/ServerActive=$ZABBIX_SERVER_IP/" /etc/zabbix/zabbix_agentd.conf
+sudo sed -i "s/^Hostname=.*/Hostname=$(hostname)/" /etc/zabbix/zabbix_agentd.conf
+
+# Enable and start the Zabbix agent service
 sudo systemctl enable zabbix-agent
+sudo systemctl start zabbix-agent
+
+# Verify the Zabbix agent is running
+sudo systemctl status zabbix-agent
 # Telegram
 
 # Token y chat_id de Telegram

@@ -118,6 +118,7 @@ Resources:
           SecurityGroupId: !Ref BastionHostSG
         - SubnetId: !Ref PrivateSubnet
           SecurityGroupId: !Ref BastionHostSG
+          PrivateIpAddress: 10.0.2.5
       UserData: !Base64 |
         #!/bin/bash
         DESIRED_HOSTNAME="BastionHost"
