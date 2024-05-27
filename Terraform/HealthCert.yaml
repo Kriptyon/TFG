@@ -535,7 +535,6 @@ Resources:
             else
                 echo "DEBUG: Contraseña no encontrada en el diccionario: $password"
             fi
-
             # Si todas las comprobaciones pasan, retorna éxito
             return 0
         }
@@ -845,7 +844,6 @@ Resources:
         # Envía el mensaje utilizando la API de Telegram
         curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
         echo "Script executed successfully."
-            
   WebServerSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -1255,7 +1253,7 @@ Resources:
       DBClusterIdentifier: hcdb-cluster
       EngineVersion: 4.0.0
       MasterUsername: HCDB_Admin
-      MasterUserPassword: Contraseña123
+      MasterUserPassword: aZeN,C'9kFw~bzñU
       PreferredBackupWindow: 07:00-09:00
       StorageEncrypted: true
       VpcSecurityGroupIds:
