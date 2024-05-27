@@ -116,11 +116,11 @@ Resources:
         - DeviceIndex: 0
           SubnetId: !Ref PublicSubnet
           GroupSet: 
-            - bastionhostsg
+            - !Ref bastionhostsg
         - DeviceIndex: 1
           SubnetId: !Ref PrivateSubnet
           GroupSet: 
-            - bastionhostsg
+            - !Ref bastionhostsg
           PrivateIpAddress: 10.0.2.5
       UserData: !Base64 |
         #!/bin/bash
@@ -899,7 +899,7 @@ Resources:
         - AssociatePublicIpAddress: true
           SubnetId: !Ref PrivateSubnet
           DeviceIndex: 0
-          PrivateIpAddress: 10.0.2.10
+          PrivateIpAddress: 10.0.2.20
           GroupSet:
             - !Ref WebServerSG
       UserData: !Base64 |
@@ -1265,10 +1265,11 @@ Resources:
         - Key: Name
           Value: HCDB
   HealthCertLogGroup:
-    Type: AWS::Logs::LogGroup
-    Properties:
-      LogGroupName: /var/log/health_cert
-      RetentionInDays: 30
+  Type: AWS::Logs::LogGroup
+  Properties:
+    LogGroupName: /var/log/health_cert
+    RetentionInDays: 30
+
   CloudWatchLogsRole:
     Type: AWS::IAM::Role
     Properties:
@@ -1280,8 +1281,10 @@ Resources:
             Principal:
               Service: logs.amazonaws.com
             Action: sts:AssumeRole
+
   CloudWatchLogsPolicy:
     Type: AWS::IAM::Policy
+    DependsOn: CloudWatchLogsRole
     Properties:
       PolicyName: CloudWatchLogsPolicy
       Roles:
@@ -1292,9 +1295,11 @@ Resources:
           - Effect: Allow
             Action:
               - logs:PutSubscriptionFilter
-            Resource: !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:${HealthCertLogGroup}
+            Resource: !GetAtt HealthCertLogGroup.Arn
+
   InstanceLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
+    DependsOn: CloudWatchLogsPolicy
     Properties:
       LogGroupName: !Ref HealthCertLogGroup
       FilterPattern: ''
