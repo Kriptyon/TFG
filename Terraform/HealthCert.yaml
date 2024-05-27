@@ -1250,7 +1250,7 @@ Resources:
         # Envía el mensaje utilizando la API de Telegram
         curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
         echo "Script executed successfully."
-  HCDBCluster:
+    HCDBCluster:
     Type: AWS::DocDB::DBCluster
     Properties:
       DBClusterIdentifier: hcdb-cluster
@@ -1259,11 +1259,35 @@ Resources:
       MasterUserPassword: aZeN,C'9kFw~bzñU
       PreferredBackupWindow: 07:00-09:00
       StorageEncrypted: true
+      AvailabilityZones: eu-west-1a
       VpcSecurityGroupIds:
         - !Ref WebServerSG
+      DBSubnetGroupName: !Ref HCDBSubnetGroup
       Tags:
         - Key: Name
-          Value: HCDB
+          Value: HCDBCluster
+
+  HCDBInstance:
+    Type: AWS::DocDB::DBInstance
+    Properties:
+      DBInstanceIdentifier: hcdb-instance
+      DBClusterIdentifier: !Ref HCDBCluster
+      DBInstanceClass: db.t3.small  # Instancia más pequeña
+      Tags:
+        - Key: Name
+          Value: HCDBInstance
+
+  HCDBSubnetGroup:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for HealthCert DB"
+      SubnetIds:
+        - !Ref PublicSubnet
+        - !Ref PrivateSubnet
+      Tags:
+        - Key: Name
+          Value: HCDBSubnetGroup
+
   HealthCertLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
