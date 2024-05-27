@@ -1265,10 +1265,10 @@ Resources:
         - Key: Name
           Value: HCDB
   HealthCertLogGroup:
-  Type: AWS::Logs::LogGroup
-  Properties:
-    LogGroupName: /var/log/health_cert
-    RetentionInDays: 30
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /var/log/health_cert
+      RetentionInDays: 30
 
   CloudWatchLogsRole:
     Type: AWS::IAM::Role
