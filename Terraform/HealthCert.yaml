@@ -1316,18 +1316,6 @@ Resources:
       PolicyName: CloudWatchLogsPolicy
       Roles:
         - !Ref CloudWatchLogsRole
-      PolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Action:
-              - logs:PutSubscriptionFilter
-              - kinesis:PutRecord
-              - kinesis:PutRecords
-            Resource: 
-              - !GetAtt HealthCertLogGroup.Arn
-              - !GetAtt HealthCertKinesisStream.Arn
-
   HealthCertKinesisStream:
     Type: AWS::Kinesis::Stream
     Properties:
