@@ -15,6 +15,15 @@ Resources:
       Tags:
         - Key: Name
           Value: Subred_Publica
+  PublicSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1b
+      CidrBlock: 10.0.3.0/24
+      VpcId: !Ref HealthCertNetwork
+      Tags:
+        - Key: Name
+          Value: Subred_Publica2
   PrivateSubnet:
     Type: AWS::EC2::Subnet
     Properties:
@@ -24,6 +33,15 @@ Resources:
       Tags:
         - Key: Name
           Value: Subred_Privada
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1b
+      CidrBlock: 10.0.4.0/24
+      VpcId: !Ref HealthCertNetwork
+      Tags:
+        - Key: Name
+          Value: Subred_Privada2
   InternetGateway:
     Type: AWS::EC2::InternetGateway
     Properties:
@@ -123,6 +141,7 @@ Resources:
             - !Ref bastionhostsg
           PrivateIpAddress: 10.0.2.5
       UserData: !Base64 |
+
         #!/bin/bash
         sudo yum update
         sudo yum upgrade -y
@@ -475,45 +494,46 @@ Resources:
         sudo pam-auth-update --force --package pwquality
         echo "Script ejecutado con éxito."
   ZabbixSG:
-    Type: AWS::EC2::SecurityGroup
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: Permite SSH desde el bastion host, trafico HTTP/HTTPS y trafico Zabbix
-      VpcId: !Ref HealthCertNetwork
+      GroupDescription: "Permite SSH desde el bastion host, trafico HTTP/HTTPS y trafico Zabbix"
+      VpcId: "!Ref HealthCertNetwork"
       SecurityGroupIngress:
-        - IpProtocol: tcp
+        - IpProtocol: "tcp"
           FromPort: 22
           ToPort: 22
-          SourceSecurityGroupId: !GetAtt bastionhostsg.GroupId
-        - IpProtocol: tcp
+          SourceSecurityGroupId: "!GetAtt bastionhostsg.GroupId"
+        - IpProtocol: "tcp"
           FromPort: 10050
           ToPort: 10050
-          CidrIp: 0.0.0.0/0
+          CidrIp: "0.0.0.0/0"
       SecurityGroupEgress:
-        - IpProtocol: -1
+        - IpProtocol: "-1"
           FromPort: 0
           ToPort: 0
-          CidrIp: 0.0.0.0/0
+          CidrIp: "0.0.0.0/0"
       Tags:
-        - Key: Name
-          Value: Zabbix_Server_SG
+        - Key: "Name"
+          Value: "Zabbix_Server_SG"
   ZSKP:
-    Type: AWS::EC2::KeyPair
+    Type: "AWS::EC2::KeyPair"
     Properties:
-      KeyName: ZSKey
+      KeyName: "ZSKey"
   ZabbixServer:
-    Type: AWS::EC2::Instance
+    Type: "AWS::EC2::Instance"
     Properties:
-      ImageId: ami-0607a9783dd204cae
-      InstanceType: t2.micro
-      KeyName: !Ref ZSKP
+      ImageId: "ami-0607a9783dd204cae"
+      InstanceType: "t2.micro"
+      KeyName: "!Ref ZSKP"
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
-          SubnetId: !Ref PrivateSubnet
+          SubnetId: "!Ref PrivateSubnet"
           DeviceIndex: 0
-          PrivateIpAddress: 10.0.2.10
+          PrivateIpAddress: "10.0.2.10"
           GroupSet:
-            - !Ref ZabbixSG
-      UserData: !Base64 |
+            - "!Ref ZabbixSG"
+      UserData: "!Base64 |"
+
         #!/bin/bash
         # Hostnme deseado
         DESIRED_HOSTNAME="ZABBIX-SRV"
@@ -1250,9 +1270,24 @@ Resources:
         # Envía el mensaje utilizando la API de Telegram
         curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
         echo "Script executed successfully."
+  GrupoHCDB:
+    Type: AWS::DocDB::DBSubnetGroup
+    Properties:
+    DBSubnetGroupDescription: String
+    DBSubnetGroupName: String
+    SubnetIds: 
+      - !Ref PublicSubnet
+        !Ref PublicSubnet2
+        !Ref PrivateSubnet
+        !Ref PrivateSubnet2
+    Tags: 
+      - Tag
   HCDBCluster:
     Type: AWS::DocDB::DBCluster
     Properties:
+      AvailabilityZones: 
+        - eu-west-1a
+          eu-west-1b       
       DBClusterIdentifier: hcdb-cluster
       EngineVersion: 4.0.0
       MasterUsername: HCDB_Admin
@@ -1264,6 +1299,7 @@ Resources:
       Tags:
         - Key: Name
           Value: HCDB
+    
   HealthCertLogGroup:
   Type: AWS::Logs::LogGroup
   Properties:
