@@ -120,16 +120,12 @@ Resources:
       Tags:
         - Key: Name
           Value: bastionhostsg
-  BHKP:
-    Type: AWS::EC2::KeyPair
-    Properties:
-      KeyName: BhKey
   BastionHost:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-0dfdc165e7af15242
       InstanceType: t2.micro
-      KeyName: !Ref BHKP
+      KeyName: BHKP
       NetworkInterfaces:
         - DeviceIndex: 0
           SubnetId: !Ref PublicSubnet
@@ -492,47 +488,43 @@ Resources:
         curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
         # Actualizacion de PAM
         sudo pam-auth-update --force --package pwquality
-        echo "Script ejecutado con éxito."
+        echo "Script ejecutado con éxito.""
   ZabbixSG:
-    Type: "AWS::EC2::SecurityGroup"
+    Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: "Permite SSH desde el bastion host, trafico HTTP/HTTPS y trafico Zabbix"
-      VpcId: "!Ref HealthCertNetwork"
+      GroupDescription: Permite SSH desde el bastion host, trafico HTTP/HTTPS y trafico Zabbix
+      VpcId: !Ref HealthCertNetwork
       SecurityGroupIngress:
-        - IpProtocol: "tcp"
+        - IpProtocol: tcp
           FromPort: 22
           ToPort: 22
-          SourceSecurityGroupId: "!GetAtt bastionhostsg.GroupId"
-        - IpProtocol: "tcp"
+          SourceSecurityGroupId: !GetAtt bastionhostsg.GroupId
+        - IpProtocol: tcp
           FromPort: 10050
           ToPort: 10050
-          CidrIp: "0.0.0.0/0"
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
-        - IpProtocol: "-1"
+        - IpProtocol: -1
           FromPort: 0
           ToPort: 0
-          CidrIp: "0.0.0.0/0"
+          CidrIp: 0.0.0.0/0
       Tags:
-        - Key: "Name"
-          Value: "Zabbix_Server_SG"
-  ZSKP:
-    Type: "AWS::EC2::KeyPair"
-    Properties:
-      KeyName: "ZSKey"
+        - Key: Name
+          Value: Zabbix_Server_SG
   ZabbixServer:
-    Type: "AWS::EC2::Instance"
+    Type: AWS::EC2::Instance
     Properties:
-      ImageId: "ami-0607a9783dd204cae"
-      InstanceType: "t2.micro"
-      KeyName: "!Ref ZSKP"
+      ImageId: ami-0607a9783dd204cae
+      InstanceType: t2.micro
+      KeyName: ZSKP
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
-          SubnetId: "!Ref PrivateSubnet"
+          SubnetId: !Ref PrivateSubnet
           DeviceIndex: 0
-          PrivateIpAddress: "10.0.2.10"
+          PrivateIpAddress: 10.0.2.10
           GroupSet:
-            - "!Ref ZabbixSG"
-      UserData: "!Base64 |"
+            - !Ref ZabbixSG
+      UserData: !Base64 |
 
         #!/bin/bash
         # Hostnme deseado
@@ -905,16 +897,12 @@ Resources:
       Tags:
         - Key: Name
           Value: WebServer_SG
-  WSKP:
-    Type: AWS::EC2::KeyPair
-    Properties:
-      KeyName: WSKey
   WebServer:
     Type: AWS::EC2::Instance
     Properties:
       ImageId: ami-0607a9783dd204cae
       InstanceType: t2.micro
-      KeyName: !Ref WSKP
+      KeyName: WSKP
       NetworkInterfaces:
         - AssociatePublicIpAddress: true
           SubnetId: !Ref PrivateSubnet
@@ -1273,38 +1261,42 @@ Resources:
   GrupoHCDB:
     Type: AWS::DocDB::DBSubnetGroup
     Properties:
-    DBSubnetGroupDescription: String
-    DBSubnetGroupName: String
-    SubnetIds: 
-      - !Ref PublicSubnet
-        !Ref PublicSubnet2
-        !Ref PrivateSubnet
-        !Ref PrivateSubnet2
-    Tags: 
-      - Tag
+      DBSubnetGroupDescription: "Subred para DocumentDB"
+      DBSubnetGroupName: "HCDBSubnetGroup"
+      SubnetIds: 
+        - !Ref PublicSubnet 
+        - !Ref PublicSubnet2
+        - !Ref PrivateSubnet
+        - !Ref PrivateSubnet2 
+      Tags: 
+        - Key: Name
+          Value: HCDB
+
   HCDBCluster:
     Type: AWS::DocDB::DBCluster
     Properties:
       AvailabilityZones: 
         - eu-west-1a
-          eu-west-1b       
+        - eu-west-1b
       DBClusterIdentifier: hcdb-cluster
       EngineVersion: 4.0.0
       MasterUsername: HCDB_Admin
-      MasterUserPassword: aZeN,C'9kFw~bzñU
+      MasterUserPassword: "aZeN,C'9kFw~bzU"
       PreferredBackupWindow: 07:00-09:00
       StorageEncrypted: true
       VpcSecurityGroupIds:
         - !Ref WebServerSG
+      DBSubnetGroupName: !Ref GrupoHCDB
       Tags:
         - Key: Name
           Value: HCDB
     
   HealthCertLogGroup:
-  Type: AWS::Logs::LogGroup
-  Properties:
-    LogGroupName: /var/log/health_cert
-    RetentionInDays: 30
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /var/log/health_cert
+      RetentionInDays: 30
+
 
   CloudWatchLogsRole:
     Type: AWS::IAM::Role
