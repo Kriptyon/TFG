@@ -1322,41 +1322,17 @@ Resources:
           - Effect: Allow
             Action:
               - logs:PutSubscriptionFilter
-            Resource: !GetAtt HealthCertLogGroup.Arn
+              - kinesis:PutRecord
+              - kinesis:PutRecords
+            Resource: 
+              - !GetAtt HealthCertLogGroup.Arn
+              - !GetAtt HealthCertKinesisStream.Arn
 
-  HealthCertLambda:
-    Type: AWS::Lambda::Function
+  HealthCertKinesisStream:
+    Type: AWS::Kinesis::Stream
     Properties:
-      Handler: index.handler
-      Role: !GetAtt LambdaExecutionRole.Arn
-      Code:
-        ZipFile: |
-          def handler(event, context):
-              print(event)
-      Runtime: python3.8
-
-  LambdaExecutionRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: lambda_execution_role
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: lambda.amazonaws.com
-            Action: sts:AssumeRole
-      Policies:
-        - PolicyName: lambda_policy
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogGroup
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                Resource: "*"
+      Name: HealthCertStream
+      ShardCount: 1
 
   InstanceLogsSubscription:
     Type: AWS::Logs::SubscriptionFilter
@@ -1364,5 +1340,5 @@ Resources:
     Properties:
       LogGroupName: !Ref HealthCertLogGroup
       FilterPattern: ''
-      DestinationArn: !GetAtt HealthCertLambda.Arn
+      DestinationArn: !GetAtt HealthCertKinesisStream.Arn
       RoleArn: !GetAtt CloudWatchLogsRole.Arn
