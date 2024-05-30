@@ -314,8 +314,6 @@ sudo cp /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.backup  # 
 
 sudo sed -i 's/^Server=.*/Server=10.0.2.10/' /etc/zabbix/zabbix_agentd.conf  # Configura el parámetro Server con la IP del servidor Zabbix
 
-# Opcionalmente, puedes configurar otros parámetros aquí
-
 # Reiniciar el servicio del agente Zabbix
 sudo systemctl restart zabbix-agent
 
@@ -333,7 +331,6 @@ sudo systemctl start apache2
 sudo ufw allow 'Apache Full'
 sudo systemctl status apache2
 
-#Cloudwatch
 # Actualiza el sistema
 sudo apt-get update
 
