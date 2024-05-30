@@ -1229,43 +1229,28 @@ Resources:
       Tags:
         - Key: Name
           Value: HCDB
-    
   HealthCertLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
       LogGroupName: /var/log/health_cert
-      RetentionInDays: 30
-
-  CloudWatchLogsRole:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: cloudwatch_logs_role
-      AssumeRolePolicyDocument:
-        Version: '2012-10-17'
-        Statement:
-          - Effect: Allow
-            Principal:
-              Service: logs.amazonaws.com
-            Action: sts:AssumeRole
-
-  CloudWatchLogsPolicy:
+      RetentionInDays: 30  
+  PoliticaLogs:
     Type: AWS::IAM::Policy
-    DependsOn: CloudWatchLogsRole
     Properties:
-      PolicyName: CloudWatchLogsPolicy
-      Roles:
-        - !Ref CloudWatchLogsRole
-  HealthCertKinesisStream:
-    Type: AWS::Kinesis::Stream
-    Properties:
-      Name: HealthCertStream
-      ShardCount: 1
-
-  InstanceLogsSubscription:
-    Type: AWS::Logs::SubscriptionFilter
-    DependsOn: CloudWatchLogsPolicy
-    Properties:
-      LogGroupName: !Ref HealthCertLogGroup
-      FilterPattern: ''
-      DestinationArn: !GetAtt HealthCertKinesisStream.Arn
-      RoleArn: !GetAtt CloudWatchLogsRole.Arn
+      PolicyName: LogsCloudWatch
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Sid: VisualEditor0
+            Effect: Allow
+            Action:
+              - logs:CreateLogStream
+              - logs:DescribeLogStreams
+              - logs:GetLogEvents
+              - logs:PutRetentionPolicy
+              - logs:PutLogEvents
+            Resource: arn:aws:logs:eu-west-1:767397746354:log-group:/var/log/health_cert
+          - Sid: VisualEditor1
+            Effect: Allow
+            Action: logs:DescribeLogGroups
+            Resource: *
