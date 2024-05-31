@@ -31,6 +31,11 @@ Resources:
     Properties:
       Domain: vpc
 
+  PublicZabbixEIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+
   NATGateway:
     Type: AWS::EC2::NatGateway
     Properties:
@@ -228,6 +233,27 @@ Resources:
         - Key: Name
           Value: Zabbix_Server_SG
 
+  ZabbixServerInterface1:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      GroupSet:
+        - !Ref ZabbixSG
+      Tags:
+        - Key: Name
+          Value: ZabbixServerInterface1
+
+  ZabbixServerInterface2:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      PrivateIpAddress: 10.0.3.10
+      GroupSet:
+        - !Ref ZabbixSG
+      Tags:
+        - Key: Name
+          Value: ZabbixServerInterface2
+
   ZabbixServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -235,12 +261,10 @@ Resources:
       InstanceType: t2.micro
       KeyName: ZSKP
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
-          SubnetId: !Ref PublicSubnet
+        - NetworkInterfaceId: !Ref ZabbixServerInterface1
           DeviceIndex: 0
-          PrivateIpAddress: 10.0.1.10
-          GroupSet:
-            - !Ref ZabbixSG
+        - NetworkInterfaceId: !Ref ZabbixServerInterface2
+          DeviceIndex: 1
       UserData: !Base64 |
         #!/bin/bash
         sudo apt install git -y
@@ -248,6 +272,12 @@ Resources:
         cd CloudFormation
         sudo chmod +x SCRIPT-ZABBIX.sh
         sudo ./SCRIPT-ZABBIX.sh
+
+  EIPAssociationZabbix:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt PublicZabbixEIP.AllocationId
+      NetworkInterfaceId: !Ref ZabbixServerInterface1
 
   WebServerSG:
     Type: AWS::EC2::SecurityGroup
@@ -295,7 +325,7 @@ Resources:
       InstanceType: t2.micro
       KeyName: WSKP
       NetworkInterfaces:
-        - AssociatePublicIpAddress: true
+        - AssociatePublicIpAddress: false
           SubnetId: !Ref PrivateSubnet
           DeviceIndex: 0
           PrivateIpAddress: 10.0.3.10
