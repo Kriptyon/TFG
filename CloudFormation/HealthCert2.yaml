@@ -202,8 +202,8 @@ Resources:
   EIPAssociation1a:
     Type: AWS::EC2::EIPAssociation
     Properties:
+      AllocationId: !GetAtt Public1a.AllocationId
       NetworkInterfaceId: !Ref BastionHostInterface1
-      EIP: !Ref Public1a
 
   ZabbixSG:
     Type: AWS::EC2::SecurityGroup
