@@ -247,7 +247,6 @@ Resources:
     Type: AWS::EC2::NetworkInterface
     Properties:
       SubnetId: !Ref PrivateSubnet
-      PrivateIpAddress: 10.0.3.10
       GroupSet:
         - !Ref ZabbixSG
       Tags:
@@ -263,8 +262,6 @@ Resources:
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref ZabbixServerInterface1
           DeviceIndex: 0
-        - NetworkInterfaceId: !Ref ZabbixServerInterface2
-          DeviceIndex: 1
       UserData: !Base64 |
         #!/bin/bash
         sudo apt install git -y
@@ -403,15 +400,9 @@ Resources:
                   - logs:GetLogEvents
                   - logs:PutRetentionPolicy
                   - logs:PutLogEvents
-                Resource: arn:aws:logs:eu-west-1:767397746354:log-group:/var/log/health_cert:*
-              - Sid: PermitirDescribirGruposDeLogs
-                Effect: Allow
-                Action:
-                  - logs:DescribeLogGroups
-                Resource: '*'
+                Resource: arn:aws:logs:eu-west-1:767397746354:log-group:/var/log/health
   CWInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
-      InstanceProfileName: CloudWatchInstanceProfile
       Roles:
         - !Ref CWRole
