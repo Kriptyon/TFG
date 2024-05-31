@@ -328,7 +328,7 @@ Resources:
         - AssociatePublicIpAddress: false
           SubnetId: !Ref PrivateSubnet
           DeviceIndex: 0
-          PrivateIpAddress: 10.0.3.10
+          PrivateIpAddress: 10.0.3.11  # Changed IP address to avoid conflict
           GroupSet:
             - !Ref WebServerSG
       UserData: !Base64 |
