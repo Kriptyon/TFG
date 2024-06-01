@@ -301,6 +301,17 @@ sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl restart ssh
 
+#!/bin/bash
+# Desired hostname
+DESIRED_HOSTNAME="ZABBIX-SRV"
+
+# Configure the hostname of the instance
+if [ -n "$DESIRED_HOSTNAME" ]; then
+    echo "$DESIRED_HOSTNAME" > /etc/hostname
+    hostnamectl set-hostname "$DESIRED_HOSTNAME"
+    sed -i "s/127.0.0.1 localhost/127.0.0.1 localhost $DESIRED_HOSTNAME/g" /etc/hosts
+fi
+
 # Install necessary packages
 sudo apt update
 sudo apt -y upgrade
@@ -318,6 +329,7 @@ sudo apt -y install mysql-server
 sudo mysql_secure_installation <<EOF
 
 y
+n
 y
 y
 y
@@ -339,7 +351,7 @@ sudo mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
 sudo mysql -e "FLUSH PRIVILEGES;"
 
 # Import initial schema and data
-zcat /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz | sudo mysql -u${DB_USER} -p${DB_PASS} ${DB_NAME}
+sudo zcat /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz | sudo mysql -u${DB_USER} -p${DB_PASS} ${DB_NAME}
 
 # Configure Zabbix server
 sudo sed -i "s/# DBPassword=/DBPassword=${DB_PASS}/" /etc/zabbix/zabbix_server.conf
