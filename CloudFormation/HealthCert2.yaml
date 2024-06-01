@@ -26,7 +26,7 @@ Resources:
     Properties:
       Domain: vpc
 
-  Public1a:
+  PublicBastionEIP:
     Type: AWS::EC2::EIP
     Properties:
       Domain: vpc
@@ -177,7 +177,6 @@ Resources:
     Type: AWS::EC2::NetworkInterface
     Properties:
       SubnetId: !Ref PrivateSubnet
-      PrivateIpAddress: 10.0.3.5
       GroupSet:
         - !Ref bastionhostsg
       Tags:
@@ -191,10 +190,10 @@ Resources:
       InstanceType: t2.micro
       KeyName: BHKP
       NetworkInterfaces:
-        - NetworkInterfaceId: !Ref BastionHostInterface1
-          DeviceIndex: 0
-        - NetworkInterfaceId: !Ref BastionHostInterface2
-          DeviceIndex: 1
+      - NetworkInterfaceId: !Ref BastionHostInterface1
+        DeviceIndex: 0
+      - NetworkInterfaceId: !Ref BastionHostInterface2
+        DeviceIndex: 1
       IamInstanceProfile: !Ref CWInstanceProfile
       UserData: !Base64 |
         #!/bin/bash
@@ -203,12 +202,15 @@ Resources:
         cd CloudFormation
         sudo chmod +x scriptBH.sh
         sudo ./scriptBH.sh
-
-  EIPAssociation1a:
+  
+  EIPAssociationBastionHost:
     Type: AWS::EC2::EIPAssociation
     Properties:
-      AllocationId: !GetAtt Public1a.AllocationId
+      AllocationId: !GetAtt PublicBastionEIP.AllocationId
       NetworkInterfaceId: !Ref BastionHostInterface1
+
+  
+
 
   ZabbixSG:
     Type: AWS::EC2::SecurityGroup
