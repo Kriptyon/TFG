@@ -276,6 +276,8 @@ Resources:
           DeviceIndex: 0
         - NetworkInterfaceId: !Ref ZabbixServerInterface2
           DeviceIndex: 1
+          PrivateIpAddress: 10.0.3.10
+
       UserData: !Base64 |
         #!/bin/bash
         # Actualizar la lista de paquetes e instalar curl si es necesario
@@ -344,7 +346,7 @@ Resources:
         - AssociatePublicIpAddress: false
           SubnetId: !Ref PrivateSubnet
           DeviceIndex: 0
-          PrivateIpAddress: 10.0.3.11  # Changed IP address to avoid conflict
+          PrivateIpAddress: 10.0.3.20
           GroupSet:
             - !Ref WebServerSG
       UserData: !Base64 |

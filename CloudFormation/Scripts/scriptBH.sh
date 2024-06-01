@@ -304,8 +304,8 @@ create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 #Zabbix
 
 # Variables
-ZABBIX_VERSION="6.0"  # Specify the Zabbix version you want to install
-ZABBIX_SERVER_IP="10.0.1.10"  # Replace with the IP address of your Zabbix server
+ZABBIX_VERSION="6.0" 
+ZABBIX_SERVER_IP="10.0.3.10" 
 
 # Update the system
 sudo yum update -y

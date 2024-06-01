@@ -312,7 +312,7 @@ sudo apt install -y zabbix-agent
 # Configurar el archivo de configuración del Zabbix Agent
 sudo cp /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.backup  # Realiza una copia de seguridad del archivo de configuración original
 
-sudo sed -i 's/^Server=.*/Server=10.0.2.10/' /etc/zabbix/zabbix_agentd.conf  # Configura el parámetro Server con la IP del servidor Zabbix
+sudo sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf  # Configura el parámetro Server con la IP del servidor Zabbix
 
 # Reiniciar el servicio del agente Zabbix
 sudo systemctl restart zabbix-agent
