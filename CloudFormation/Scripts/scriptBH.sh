@@ -1,5 +1,5 @@
 #!/bin/bash
-DESIRED_HOSTNAME="Web-SRV"
+DESIRED_HOSTNAME="bastion"
 
 sudo yum update
 sudo yum upgrade -y
