@@ -206,14 +206,13 @@ Resources:
         chmod +x /home/ec2-user/scriptBH.sh
         # Ejecutar el script
         /home/ec2-user/scriptBH.sh
-  
+
   EIPAssociationBastionHost:
     Type: AWS::EC2::EIPAssociation
     Properties:
       AllocationId: !GetAtt PublicBastionEIP.AllocationId
       NetworkInterfaceId: !Ref BastionHostInterface1
 
-  
   ZabbixSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -255,6 +254,17 @@ Resources:
         - Key: Name
           Value: ZabbixServerInterface1
 
+  ZabbixServerInterface2:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      SubnetId: !Ref PrivateSubnet
+      GroupSet:
+        - !Ref ZabbixSG
+      PrivateIpAddress: 10.0.3.10
+      Tags:
+        - Key: Name
+          Value: ZabbixServerInterface2
+
   ZabbixServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -264,8 +274,8 @@ Resources:
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref ZabbixServerInterface1
           DeviceIndex: 0
-        - DeviceIndex: 1
-          PrivateIpAddress: 10.0.3.10
+        - NetworkInterfaceId: !Ref ZabbixServerInterface2
+          DeviceIndex: 1
       UserData: !Base64 |
         #!/bin/bash
         # Actualizar la lista de paquetes e instalar curl si es necesario
@@ -277,7 +287,6 @@ Resources:
         chmod +x /home/ubuntu/SCRIPT-ZABBIX.sh
         # Ejecutar el script
         /home/ubuntu/SCRIPT-ZABBIX.sh
-
 
   EIPAssociationZabbix:
     Type: AWS::EC2::EIPAssociation
@@ -349,7 +358,6 @@ Resources:
         # Ejecutar el script
         /home/ubuntu/SCRIPT-WEB.sh
 
-
   GrupoHCDB:
     Type: AWS::DocDB::DBSubnetGroup
     Properties:
@@ -415,6 +423,7 @@ Resources:
                   - logs:PutRetentionPolicy
                   - logs:PutLogEvents
                 Resource: arn:aws:logs:eu-west-1:767397746354:log-group:/var/log/health
+
   CWInstanceProfile:
     Type: AWS::IAM::InstanceProfile
     Properties:
