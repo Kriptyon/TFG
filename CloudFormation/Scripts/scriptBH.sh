@@ -1,4 +1,5 @@
 #!/bin/bash
+DESIRED_HOSTNAME="Web-SRV"
 
 sudo yum update
 sudo yum upgrade -y
