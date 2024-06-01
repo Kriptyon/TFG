@@ -301,17 +301,6 @@ sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl restart ssh
 
-#!/bin/bash
-# Desired hostname
-DESIRED_HOSTNAME="ZABBIX-SRV"
-
-# Configure the hostname of the instance
-if [ -n "$DESIRED_HOSTNAME" ]; then
-    echo "$DESIRED_HOSTNAME" > /etc/hostname
-    hostnamectl set-hostname "$DESIRED_HOSTNAME"
-    sed -i "s/127.0.0.1 localhost/127.0.0.1 localhost $DESIRED_HOSTNAME/g" /etc/hosts
-fi
-
 # Install necessary packages
 sudo apt update
 sudo apt -y upgrade
