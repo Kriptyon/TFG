@@ -255,16 +255,6 @@ Resources:
         - Key: Name
           Value: ZabbixServerInterface1
 
-  ZabbixServerInterface2:
-    Type: AWS::EC2::NetworkInterface
-    Properties:
-      SubnetId: !Ref PrivateSubnet
-      GroupSet:
-        - !Ref ZabbixSG
-      Tags:
-        - Key: Name
-          Value: BastionHostInterface2
-
   ZabbixServer:
     Type: AWS::EC2::Instance
     Properties:
@@ -274,9 +264,9 @@ Resources:
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref ZabbixServerInterface1
           DeviceIndex: 0
-        - NetworkInterfaceId: !Ref ZabbixServerInterface2
-          DeviceIndex: 1
+        - DeviceIndex: 1
           PrivateIpAddress: 10.0.3.10
+      UserData: !Base64 |
 
       UserData: !Base64 |
         #!/bin/bash
