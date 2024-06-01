@@ -300,29 +300,47 @@ sudo apt install -y ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl restart ssh
-#INSTALAR ZABBIX SERVER
-# Variables
+# Install Zabbix server and dependencies
 DB_NAME="zabbix_HC"
 DB_USER="s.garcia_HC"
 DB_PASS="43]iO_eGya(rP,U"
 ZBX_SERVER_IP="127.0.0.1"
 TIMEZONE="Europe/Madrid"
+
 sudo apt update
 sudo apt -y upgrade
 sudo apt -y install wget gnupg2
+
+# Add Zabbix repository
 wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo apt update
+
+# Install Zabbix server, frontend, and agent
 sudo apt -y install zabbix-server-pgsql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent postgresql
+
+# Configure PostgreSQL database
 sudo -i -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
 sudo -i -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
 sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+
+# Import initial schema and data
 zcat /usr/share/doc/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u postgres psql ${DB_NAME}
+
+# Configure Zabbix server
 sudo sed -i "s/# DBPassword=/DBPassword=${DB_PASS}/" /etc/zabbix/zabbix_server.conf
+
+# Restart and enable Zabbix server and agent
 sudo systemctl restart zabbix-server zabbix-agent
 sudo systemctl enable zabbix-server zabbix-agent
+
+# Configure PHP for Zabbix frontend
 sudo sed -i "s/^;date.timezone =$/date.timezone = ${TIMEZONE}/" /etc/php/*/apache2/php.ini
+
+# Restart Apache
 sudo systemctl restart apache2
+
+# Create Zabbix frontend configuration
 sudo tee /etc/zabbix/web/zabbix.conf.php <<EOL
 <?php
 // Zabbix GUI configuration file.
@@ -342,15 +360,14 @@ EOL
 
 # Telegram
 
-# Token y chat_id de Telegram
+# Token and chat_id for Telegram
 TELEGRAM_BOT_TOKEN="6835637516:AAFCs4xax9K37Xq3p2Sgkqt_8gVjAhYhB7A"
 TELEGRAM_CHAT_ID="5089735569"
 
-# Mensaje a enviar
-MESSAGE="El script de configuración ha sido ejecutado con éxito en  $DESIRED_HOSTNAME."
+# Message to send
+MESSAGE="The configuration script has been successfully executed on $DESIRED_HOSTNAME."
 
-# Envía el mensaje utilizando la API de Telegram
+# Send the message using the Telegram API
 curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
-
 
 echo "Script executed successfully."
