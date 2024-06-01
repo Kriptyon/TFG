@@ -210,8 +210,6 @@ Resources:
       NetworkInterfaceId: !Ref BastionHostInterface1
 
   
-
-
   ZabbixSG:
     Type: AWS::EC2::SecurityGroup
     Properties:
@@ -253,7 +251,7 @@ Resources:
         - !Ref ZabbixSG
       Tags:
         - Key: Name
-          Value: ZabbixServerInterface2
+          Value: BastionHostInterface2
 
   ZabbixServer:
     Type: AWS::EC2::Instance
@@ -264,6 +262,8 @@ Resources:
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref ZabbixServerInterface1
           DeviceIndex: 0
+        - NetworkInterface: !Ref ZabbixServerInterface2
+          DeviceIndex: 1
       UserData: !Base64 |
         #!/bin/bash
         sudo apt install git -y
