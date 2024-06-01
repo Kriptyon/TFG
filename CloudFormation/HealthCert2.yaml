@@ -262,7 +262,7 @@ Resources:
       NetworkInterfaces:
         - NetworkInterfaceId: !Ref ZabbixServerInterface1
           DeviceIndex: 0
-        - NetworkInterface: !Ref ZabbixServerInterface2
+        - NetworkInterfaceId: !Ref ZabbixServerInterface2
           DeviceIndex: 1
       UserData: !Base64 |
         #!/bin/bash
