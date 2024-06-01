@@ -267,8 +267,6 @@ Resources:
         - DeviceIndex: 1
           PrivateIpAddress: 10.0.3.10
       UserData: !Base64 |
-
-      UserData: !Base64 |
         #!/bin/bash
         # Actualizar la lista de paquetes e instalar curl si es necesario
         apt-get update -y
