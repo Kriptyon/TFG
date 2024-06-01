@@ -300,13 +300,8 @@ sudo apt install -y ssh
 sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl restart ssh
-# Install Zabbix server and dependencies
-DB_NAME="zabbix_HC"
-DB_USER="s.garcia_HC"
-DB_PASS="43]iO_eGya(rP,U"
-ZBX_SERVER_IP="127.0.0.1"
-TIMEZONE="Europe/Madrid"
 
+# Install necessary packages
 sudo apt update
 sudo apt -y upgrade
 sudo apt -y install wget gnupg2
@@ -316,16 +311,35 @@ wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix
 sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
 sudo apt update
 
-# Install Zabbix server, frontend, and agent
-sudo apt -y install zabbix-server-pgsql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent postgresql
+# Install MySQL server
+sudo apt -y install mysql-server
 
-# Configure PostgreSQL database
-sudo -i -u postgres psql -c "CREATE DATABASE ${DB_NAME};"
-sudo -i -u postgres psql -c "CREATE USER ${DB_USER} WITH PASSWORD '${DB_PASS}';"
-sudo -i -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};"
+# Secure MySQL installation (optional, but recommended)
+sudo mysql_secure_installation <<EOF
+
+y
+y
+y
+y
+EOF
+
+# Install Zabbix server, frontend, and agent
+sudo apt -y install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+
+# Configure MySQL database
+DB_NAME="zabbix_HC"
+DB_USER="s.garcia_HC"
+DB_PASS="43]iO_eGya(rP,U"
+ZBX_SERVER_IP="127.0.0.1"
+TIMEZONE="Europe/Madrid"
+
+sudo mysql -e "CREATE DATABASE ${DB_NAME} CHARACTER SET utf8 COLLATE utf8_bin;"
+sudo mysql -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
+sudo mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
+sudo mysql -e "FLUSH PRIVILEGES;"
 
 # Import initial schema and data
-zcat /usr/share/doc/zabbix-sql-scripts/postgresql/server.sql.gz | sudo -u postgres psql ${DB_NAME}
+zcat /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz | sudo mysql -u${DB_USER} -p${DB_PASS} ${DB_NAME}
 
 # Configure Zabbix server
 sudo sed -i "s/# DBPassword=/DBPassword=${DB_PASS}/" /etc/zabbix/zabbix_server.conf
@@ -344,9 +358,9 @@ sudo systemctl restart apache2
 sudo tee /etc/zabbix/web/zabbix.conf.php <<EOL
 <?php
 // Zabbix GUI configuration file.
-\$DB['TYPE'] = 'POSTGRESQL';
+\$DB['TYPE'] = 'MYSQL';
 \$DB['SERVER'] = 'localhost';
-\$DB['PORT'] = '5432';
+\$DB['PORT'] = '3306';
 \$DB['DATABASE'] = '${DB_NAME}';
 \$DB['USER'] = '${DB_USER}';
 \$DB['PASSWORD'] = '${DB_PASS}';
