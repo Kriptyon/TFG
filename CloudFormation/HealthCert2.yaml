@@ -197,11 +197,15 @@ Resources:
       IamInstanceProfile: !Ref CWInstanceProfile
       UserData: !Base64 |
         #!/bin/bash
-        sudo yum install git -y
-        git clone https://github.com/Kriptyon/TFG.git
-        cd CloudFormation
-        sudo chmod +x scriptBH.sh
-        sudo ./scriptBH.sh
+        # Actualizar la lista de paquetes e instalar curl si es necesario
+        dnf update -y
+        dnf install -y curl
+        # Descargar el script desde GitHub
+        curl -o /home/ec2-user/scriptBH.sh https://raw.githubusercontent.com/Kriptyon/TFG/main/CloudFormation/Scripts/scriptBH.sh
+        # Dar permisos de ejecución al script
+        chmod +x /home/ec2-user/scriptBH.sh
+        # Ejecutar el script
+        /home/ec2-user/scriptBH.sh
   
   EIPAssociationBastionHost:
     Type: AWS::EC2::EIPAssociation
@@ -266,11 +270,16 @@ Resources:
           DeviceIndex: 1
       UserData: !Base64 |
         #!/bin/bash
-        sudo apt install git -y
-        git clone https://github.com/Kriptyon/TFG.git
-        cd CloudFormation
-        sudo chmod +x SCRIPT-ZABBIX.sh
-        sudo ./SCRIPT-ZABBIX.sh
+        # Actualizar la lista de paquetes e instalar curl si es necesario
+        apt-get update -y
+        apt-get install -y curl
+        # Descargar el script desde GitHub
+        curl -o /home/ubuntu/SCRIPT-ZABBIX.sh https://raw.githubusercontent.com/Kriptyon/TFG/main/CloudFormation/Scripts/SCRIPT-ZABBIX.sh
+        # Dar permisos de ejecución al script
+        chmod +x /home/ubuntu/SCRIPT-ZABBIX.sh
+        # Ejecutar el script
+        /home/ubuntu/SCRIPT-ZABBIX.sh
+
 
   EIPAssociationZabbix:
     Type: AWS::EC2::EIPAssociation
@@ -332,11 +341,16 @@ Resources:
             - !Ref WebServerSG
       UserData: !Base64 |
         #!/bin/bash
-        sudo apt install git -y
-        git clone https://github.com/Kriptyon/TFG.git
-        cd CloudFormation
-        sudo chmod +x SCRIPT-WEB.sh
-        sudo ./SCRIPT-WEB.sh
+        # Actualizar la lista de paquetes e instalar curl si es necesario
+        apt-get update -y
+        apt-get install -y curl
+        # Descargar el script desde GitHub
+        curl -o /home/ubuntu/SCRIPT-WEB.sh https://raw.githubusercontent.com/Kriptyon/TFG/main/CloudFormation/Scripts/SCRIPT-WEB.sh
+        # Dar permisos de ejecución al script
+        chmod +x /home/ubuntu/SCRIPT-WEB.sh
+        # Ejecutar el script
+        /home/ubuntu/SCRIPT-WEB.sh
+
 
   GrupoHCDB:
     Type: AWS::DocDB::DBSubnetGroup
