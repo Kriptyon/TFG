@@ -154,6 +154,14 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 10050
+          ToPort: 10050
+          CidrIp: 10.0.3.0/24
+        - IpProtocol: tcp
+          FromPort: 10051
+          ToPort: 10051
+          CidrIp: 10.0.3.0/24
       SecurityGroupEgress:
         - IpProtocol: -1
           FromPort: 0
@@ -226,6 +234,10 @@ Resources:
         - IpProtocol: tcp
           FromPort: 10050
           ToPort: 10050
+        - IpProtocol: tcp
+          FromPort: 10051
+          ToPort: 10051
+          CidrIp: 10.0.3.0/24
           CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
@@ -357,39 +369,6 @@ Resources:
         chmod +x /home/ubuntu/SCRIPT-WEB.sh
         # Ejecutar el script
         /home/ubuntu/SCRIPT-WEB.sh
-
-  GrupoHCDB:
-    Type: AWS::DocDB::DBSubnetGroup
-    Properties:
-      DBSubnetGroupDescription: Subred para DocumentDB
-      DBSubnetGroupName: HCDBSubnetGroup
-      SubnetIds:
-        - !Ref PublicSubnet
-        - !Ref PublicSubnet2
-        - !Ref PrivateSubnet
-        - !Ref PrivateSubnet2
-      Tags:
-        - Key: Name
-          Value: HCDB
-
-  HCDBCluster:
-    Type: AWS::DocDB::DBCluster
-    Properties:
-      AvailabilityZones:
-        - eu-west-1a
-        - eu-west-1b
-      DBClusterIdentifier: hcdb-cluster
-      EngineVersion: 4.0.0
-      MasterUsername: HCDB_Admin
-      MasterUserPassword: aZeN,C'9kFw~bzU
-      PreferredBackupWindow: 07:00-09:00
-      StorageEncrypted: true
-      VpcSecurityGroupIds:
-        - !Ref WebServerSG
-      DBSubnetGroupName: !Ref GrupoHCDB
-      Tags:
-        - Key: Name
-          Value: HCDB
 
   HealthCertLogGroup:
     Type: AWS::Logs::LogGroup
