@@ -302,29 +302,39 @@ sudo systemctl start ssh
 sudo systemctl restart ssh
 
 # Install necessary packages
+DB_PASSWORD="43]iO_eGya(rP,U"
+ZABBIX_VERSION="6.0"
 
-DB_ROOT_PASSWORD="m',0(@^&M+sA+p="
-DB_ZABBIX_PASSWORD="43]iO_eGya(rP,U"
-ZABBIX_DB="HCZDB"
-ZABBIX_USER="s.garcia_HC"
-ZABBIX_PASSWORD="FaepYUfIj{1up5H"
+# Update the system
+apt-get update -y
+apt-get upgrade -y
 
-wget https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu22.04_all.deb
-dpkg -i zabbix-release_6.4-1+ubuntu22.04_all.deb
-apt install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
-debconf-set-selections <<< "mysql-server mysql-server/root_password password $DB_ROOT_PASSWORD"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $DB_ROOT_PASSWORD"
-apt install -y mysql-server
+# Install MySQL Server
+echo "mysql-server mysql-server/root_password password $DB_PASSWORD" | debconf-set-selections
+echo "mysql-server mysql-server/root_password_again password $DB_PASSWORD" | debconf-set-selections
+apt-get install -y mysql-server
 
-mysql -uroot -p$DB_ROOT_PASSWORD -e "CREATE DATABASE $ZABBIX_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
-mysql -uroot -p$DB_ROOT_PASSWORD -e "CREATE USER '$ZABBIX_USER'@'localhost' IDENTIFIED BY '$ZABBIX_PASSWORD';"
-mysql -uroot -p$DB_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON $ZABBIX_DB.* TO '$ZABBIX_USER'@'localhost';"
-mysql -uroot -p$DB_ROOT_PASSWORD -e "SET GLOBAL log_bin_trust_function_creators = 1;"
+# Create Zabbix database and user
+mysql -uroot -p$DB_PASSWORD -e "CREATE DATABASE zabbix CHARACTER SET utf8 COLLATE utf8_bin;"
+mysql -uroot -p$DB_PASSWORD -e "CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
+mysql -uroot -p$DB_PASSWORD -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
+mysql -uroot -p$DB_PASSWORD -e "FLUSH PRIVILEGES;"
 
-zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u$ZABBIX_USER -p$ZABBIX_PASSWORD $ZABBIX_DB
-mysql -uroot -p$DB_ROOT_PASSWORD -e "SET GLOBAL log_bin_trust_function_creators = 0;"
-sed -i "s/# DBPassword=/DBPassword=$ZABBIX_PASSWORD/" /etc/zabbix/zabbix_server.conf
+# Install Zabbix repository
+wget https://repo.zabbix.com/zabbix/$ZABBIX_VERSION/ubuntu/pool/main/z/zabbix-release/zabbix-release_$ZABBIX_VERSION-1%2Bubuntu20.04_all.deb
+dpkg -i zabbix-release_$ZABBIX_VERSION-1+ubuntu20.04_all.deb
+apt-get update -y
 
+# Install Zabbix server, frontend, and agent
+apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-agent
+
+# Import initial schema and data
+zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p$DB_PASSWORD zabbix
+
+# Configure database for Zabbix server
+sed -i "s/# DBPassword=/DBPassword=$DB_PASSWORD/g" /etc/zabbix/zabbix_server.conf
+
+# Start Zabbix server and agent processes
 systemctl restart zabbix-server zabbix-agent apache2
 systemctl enable zabbix-server zabbix-agent apache2
 
