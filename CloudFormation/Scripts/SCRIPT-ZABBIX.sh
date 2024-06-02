@@ -302,82 +302,38 @@ sudo systemctl start ssh
 sudo systemctl restart ssh
 
 # Install necessary packages
-sudo apt update
-sudo apt -y upgrade
-sudo apt -y install wget gnupg2
 
-# Add Zabbix repository
-wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
-sudo dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
-sudo apt update
+DB_ROOT_PASSWORD="m',0(@^&M+sA+p="
+DB_ZABBIX_PASSWORD="43]iO_eGya(rP,U"
+ZABBIX_DB="HCZDB"
+ZABBIX_USER="s.garcia_HC"
+ZABBIX_PASSWORD="FaepYUfIj{1up5H"
 
-# Install MySQL server
-sudo apt -y install mysql-server
+wget https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu22.04_all.deb
+dpkg -i zabbix-release_6.4-1+ubuntu22.04_all.deb
+apt install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
+debconf-set-selections <<< "mysql-server mysql-server/root_password password $DB_ROOT_PASSWORD"
+debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $DB_ROOT_PASSWORD"
+apt install -y mysql-server
 
-# Secure MySQL installation (optional, but recommended)
-sudo mysql_secure_installation <<EOF
+mysql -uroot -p$DB_ROOT_PASSWORD -e "CREATE DATABASE $ZABBIX_DB CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;"
+mysql -uroot -p$DB_ROOT_PASSWORD -e "CREATE USER '$ZABBIX_USER'@'localhost' IDENTIFIED BY '$ZABBIX_PASSWORD';"
+mysql -uroot -p$DB_ROOT_PASSWORD -e "GRANT ALL PRIVILEGES ON $ZABBIX_DB.* TO '$ZABBIX_USER'@'localhost';"
+mysql -uroot -p$DB_ROOT_PASSWORD -e "SET GLOBAL log_bin_trust_function_creators = 1;"
 
-y
-n
-y
-y
-y
-EOF
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -u$ZABBIX_USER -p$ZABBIX_PASSWORD $ZABBIX_DB
+mysql -uroot -p$DB_ROOT_PASSWORD -e "SET GLOBAL log_bin_trust_function_creators = 0;"
+sed -i "s/# DBPassword=/DBPassword=$ZABBIX_PASSWORD/" /etc/zabbix/zabbix_server.conf
 
-# Install Zabbix server, frontend, and agent
-sudo apt -y install zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-sql-scripts zabbix-agent
-
-# Configure MySQL database
-DB_NAME="zabbix_HC"
-DB_USER="s.garcia_HC"
-DB_PASS="43]iO_eGya(rP,U"
-ZBX_SERVER_IP="127.0.0.1"
-TIMEZONE="Europe/Madrid"
-
-sudo mysql -e "CREATE DATABASE ${DB_NAME} CHARACTER SET utf8 COLLATE utf8_bin;"
-sudo mysql -e "CREATE USER '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASS}';"
-sudo mysql -e "GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';"
-sudo mysql -e "FLUSH PRIVILEGES;"
-
-# Import initial schema and data
-sudo zcat /usr/share/doc/zabbix-sql-scripts/mysql/server.sql.gz | sudo mysql -u${DB_USER} -p${DB_PASS} ${DB_NAME}
-
-# Configure Zabbix server
-sudo sed -i "s/# DBPassword=/DBPassword=${DB_PASS}/" /etc/zabbix/zabbix_server.conf
-
-# Restart and enable Zabbix server and agent
-sudo systemctl restart zabbix-server zabbix-agent
-sudo systemctl enable zabbix-server zabbix-agent
-
-# Configure PHP for Zabbix frontend
-sudo sed -i "s/^;date.timezone =$/date.timezone = ${TIMEZONE}/" /etc/php/*/apache2/php.ini
-
-# Restart Apache
-sudo systemctl restart apache2
-
-# Create Zabbix frontend configuration
-sudo tee /etc/zabbix/web/zabbix.conf.php <<EOL
-<?php
-// Zabbix GUI configuration file.
-\$DB['TYPE'] = 'MYSQL';
-\$DB['SERVER'] = 'localhost';
-\$DB['PORT'] = '3306';
-\$DB['DATABASE'] = '${DB_NAME}';
-\$DB['USER'] = '${DB_USER}';
-\$DB['PASSWORD'] = '${DB_PASS}';
-\$DB['SCHEMA'] = '';
-\$ZBX_SERVER = '${ZBX_SERVER_IP}';
-\$ZBX_SERVER_PORT = '10051';
-\$ZBX_SERVER_NAME = 'Zabbix Server';
-\$IMAGE_FORMAT_DEFAULT = IMAGE_FORMAT_PNG;
-?>
-EOL
+systemctl restart zabbix-server zabbix-agent apache2
+systemctl enable zabbix-server zabbix-agent apache2
 
 # Telegram
 
 # Token and chat_id for Telegram
 TELEGRAM_BOT_TOKEN="6835637516:AAFCs4xax9K37Xq3p2Sgkqt_8gVjAhYhB7A"
 TELEGRAM_CHAT_ID="5089735569"
+apt update
 
 # Message to send
 MESSAGE="The configuration script has been successfully executed on $DESIRED_HOSTNAME."
