@@ -302,41 +302,6 @@ sudo systemctl start ssh
 sudo systemctl restart ssh
 
 # Install necessary packages
-DB_PASSWORD="43]iO_eGya(rP,U"
-ZABBIX_VERSION="6.0"
-
-# Update the system
-apt-get update -y
-apt-get upgrade -y
-
-# Install MySQL Server
-echo "mysql-server mysql-server/root_password password $DB_PASSWORD" | debconf-set-selections
-echo "mysql-server mysql-server/root_password_again password $DB_PASSWORD" | debconf-set-selections
-apt-get install -y mysql-server
-
-# Create Zabbix database and user
-mysql -uroot -p$DB_PASSWORD -e "CREATE DATABASE zabbix CHARACTER SET utf8 COLLATE utf8_bin;"
-mysql -uroot -p$DB_PASSWORD -e "CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$DB_PASSWORD';"
-mysql -uroot -p$DB_PASSWORD -e "GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';"
-mysql -uroot -p$DB_PASSWORD -e "FLUSH PRIVILEGES;"
-
-# Install Zabbix repository
-wget https://repo.zabbix.com/zabbix/$ZABBIX_VERSION/ubuntu/pool/main/z/zabbix-release/zabbix-release_$ZABBIX_VERSION-1%2Bubuntu20.04_all.deb
-dpkg -i zabbix-release_$ZABBIX_VERSION-1+ubuntu20.04_all.deb
-apt-get update -y
-
-# Install Zabbix server, frontend, and agent
-apt-get install -y zabbix-server-mysql zabbix-frontend-php zabbix-apache-conf zabbix-agent
-
-# Import initial schema and data
-zcat /usr/share/doc/zabbix-server-mysql*/create.sql.gz | mysql -uzabbix -p$DB_PASSWORD zabbix
-
-# Configure database for Zabbix server
-sed -i "s/# DBPassword=/DBPassword=$DB_PASSWORD/g" /etc/zabbix/zabbix_server.conf
-
-# Start Zabbix server and agent processes
-systemctl restart zabbix-server zabbix-agent apache2
-systemctl enable zabbix-server zabbix-agent apache2
 
 # Telegram
 
@@ -344,7 +309,6 @@ systemctl enable zabbix-server zabbix-agent apache2
 TELEGRAM_BOT_TOKEN="6835637516:AAFCs4xax9K37Xq3p2Sgkqt_8gVjAhYhB7A"
 TELEGRAM_CHAT_ID="5089735569"
 apt update
-
 # Message to send
 MESSAGE="The configuration script has been successfully executed on $DESIRED_HOSTNAME."
 
