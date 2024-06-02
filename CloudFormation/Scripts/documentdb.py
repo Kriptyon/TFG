@@ -13,9 +13,8 @@ if not all([username, password, cluster_endpoint]):
     raise EnvironmentError("Por favor, configura las variables de entorno DOCDB_USERNAME, DOCDB_PASSWORD y DOCDB_CLUSTER_ENDPOINT.")
 
 # Conexión al clúster DocumentDB
-uri = f"mongodb://{username}:{password}@{cluster_endpoint}:27017/?ssl=true&ssl_ca_certs=rds-combined-ca-bundle.pem&retryWrites=false"
+uri = f"mongodb://{username}:{password}@{cluster_endpoint}:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
 client = MongoClient(uri)
-
 # Crear la base de datos
 db = client["HealthCert"]
 
