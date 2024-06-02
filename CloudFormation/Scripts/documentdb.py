@@ -14,7 +14,10 @@ if not all([username, password, cluster_endpoint]):
 
 # Conexión al clúster DocumentDB
 uri = f"mongodb://{username}:{password}@{cluster_endpoint}:27017/?tls=true&tlsCAFile=global-bundle.pem&replicaSet=rs0&readPreference=secondaryPreferred&retryWrites=false"
+
+# Crear el cliente MongoDB
 client = MongoClient(uri)
+
 # Crear la base de datos
 db = client["HealthCert"]
 
@@ -43,7 +46,8 @@ for _ in range(10):
         "pacientes": [],
         "salario": random.randint(50000, 120000)
     }
-    medicos.insert_one(medico)
+    with client.start_session() as session:
+        medicos.insert_one(medico, session=session)
 
 # Crear pacientes
 pacientes_ids = []
@@ -61,12 +65,14 @@ for _ in range(50):
         "numero_poliza": fake.numerify(text="POL-#####"),
         "medico_asignado": random.choice(medicos_ids)
     }
-    pacientes.insert_one(paciente)
+    with client.start_session() as session:
+        pacientes.insert_one(paciente, session=session)
 
 # Asignar pacientes a médicos
 for paciente_id in pacientes_ids:
     medico_id = random.choice(medicos_ids)
-    medicos.update_one({"_id": medico_id}, {"$push": {"pacientes": paciente_id}})
+    with client.start_session() as session:
+        medicos.update_one({"_id": medico_id}, {"$push": {"pacientes": paciente_id}}, session=session)
 
 # Crear historial médico
 for paciente_id in pacientes_ids:
@@ -79,7 +85,8 @@ for paciente_id in pacientes_ids:
         "cubierto": random.choice([True, False]),
         "cobro_servicio": random.randint(100, 1000)
     }
-    historial_medico.insert_one(historial)
+    with client.start_session() as session:
+        historial_medico.insert_one(historial, session=session)
 
 # Crear citas médicas
 for _ in range(100):
@@ -92,6 +99,7 @@ for _ in range(100):
         "paciente": random.choice(pacientes_ids),
         "medico": random.choice(medicos_ids)
     }
-    citas_medicas.insert_one(cita)
+    with client.start_session() as session:
+        citas_medicas.insert_one(cita, session=session)
 
 print("Script de generación de datos aleatorios en HealthCert ejecutado con éxito")
