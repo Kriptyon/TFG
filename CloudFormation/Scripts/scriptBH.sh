@@ -1,5 +1,5 @@
 #!/bin/bash
-DESIRED_HOSTNAME="bastion"
+DESIRED_HOSTNAME="bastionHealth"
 
 sudo yum update
 sudo yum upgrade -y

@@ -310,7 +310,7 @@ TELEGRAM_BOT_TOKEN="6835637516:AAFCs4xax9K37Xq3p2Sgkqt_8gVjAhYhB7A"
 TELEGRAM_CHAT_ID="5089735569"
 apt update
 # Message to send
-MESSAGE="The configuration script has been successfully executed on $DESIRED_HOSTNAME."
+MESSAGE="El script de configuración ha sido ejecutado con éxito en  $DESIRED_HOSTNAME."
 
 # Send the message using the Telegram API
 curl -s -X POST https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/sendMessage -d chat_id=$TELEGRAM_CHAT_ID -d text="$MESSAGE"
