@@ -302,40 +302,20 @@ sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
 #Zabbix
+yum update -y
+yum install wget -y
+wget https://repo.zabbix.com/zabbix/6.4/rhel/9/x86_64/zabbix-release-6.4-1.el9.noarch.rpm
+rpm -Uvh zabbix-release-6.4-1.el9.noarch.rpm
+yum update -y
+yum install zabbix-agent -y
 
-# Variables
-ZABBIX_VERSION="6.0" 
-ZABBIX_SERVER_IP="10.0.3.10" 
+sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+sed -i 's/^ServerActive=.*/ServerActive=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+sed -i 's/^Hostname=.*/Hostname=bastionHealth/' /etc/zabbix/zabbix_agentd.conf
 
-# Update the system
-sudo yum update -y
-
-# Install prerequisites
-sudo yum install -y wget
-
-# Download the Zabbix repository package
-wget https://repo.zabbix.com/zabbix/$ZABBIX_VERSION/rhel/9/x86_64/zabbix-release-$ZABBIX_VERSION-1.el9.noarch.rpm
-
-# Install the Zabbix repository
-sudo rpm -Uvh zabbix-release-$ZABBIX_VERSION-1.el9.noarch.rpm
-
-# Clean the repository cache
-sudo yum clean all
-
-# Install the Zabbix agent
-sudo yum install -y zabbix-agent
-
-# Configure the Zabbix agent
-sudo sed -i "s/^Server=.*/Server=$ZABBIX_SERVER_IP/" /etc/zabbix/zabbix_agentd.conf
-sudo sed -i "s/^ServerActive=.*/ServerActive=$ZABBIX_SERVER_IP/" /etc/zabbix/zabbix_agentd.conf
-sudo sed -i "s/^Hostname=.*/Hostname=$(hostname)/" /etc/zabbix/zabbix_agentd.conf
-
-# Enable and start the Zabbix agent service
-sudo systemctl enable zabbix-agent
-sudo systemctl start zabbix-agent
-
-# Verify the Zabbix agent is running
-sudo systemctl status zabbix-agent
+systemctl restart zabbix-agent
+systemctl enable zabbix-agent
+systemctl status zabbix-agent
 # Telegram
 
 # Token y chat_id de Telegram
