@@ -302,7 +302,6 @@ sudo systemctl start ssh
 sudo systemctl restart ssh
 
 #ZABBIX
-#!/bin/bash
 
 # Variables
 ZABBIX_DB_PASSWORD="password"
