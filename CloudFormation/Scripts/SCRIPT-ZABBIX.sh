@@ -301,8 +301,44 @@ sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl restart ssh
 
-# Install necessary packages
+#ZABBIX
+#!/bin/bash
 
+# Variables
+ZABBIX_DB_PASSWORD="password"
+echo "Downloading Zabbix repository package..."
+wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
+echo "Installing Zabbix repository package..."
+dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+echo "Updating package list..."
+apt update
+echo "Installing Zabbix server and necessary packages..."
+apt install -y zabbix-server-mysql zabbix-agent zabbix-apache-conf zabbix-sql-scripts zabbix-frontend-php mysql-server
+echo "Starting MySQL service..."
+systemctl start mysql
+echo "Creating Zabbix database and user..."
+mysql -uroot <<EOF
+CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$ZABBIX_DB_PASSWORD';
+GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';
+SET GLOBAL log_bin_trust_function_creators = 1;
+FLUSH PRIVILEGES;
+QUIT;
+EOF
+echo "Importing initial schema and data to Zabbix database..."
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p$ZABBIX_DB_PASSWORD zabbix
+echo "Disabling log_bin_trust_function_creators option..."
+mysql -uroot <<EOF
+SET GLOBAL log_bin_trust_function_creators = 0;
+QUIT;
+EOF
+echo "Configuring Zabbix server database settings..."
+sed -i "s/^# DBPassword=.*/DBPassword=$ZABBIX_DB_PASSWORD/" /etc/zabbix/zabbix_server.conf
+echo "Restarting Zabbix server, agent, and Apache2 services..."
+systemctl restart zabbix-server zabbix-agent apache2
+echo "Enabling Zabbix server, agent, and Apache2 services to start at boot..."
+systemctl enable zabbix-server zabbix-agent apache2
+echo "Zabbix installation and configuration completed."
 # Telegram
 
 # Token and chat_id for Telegram
