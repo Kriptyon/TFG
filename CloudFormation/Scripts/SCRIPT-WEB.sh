@@ -302,23 +302,21 @@ sudo systemctl restart ssh
 
 #Zabbix Agent
 
-# Actualizar el sistema
-sudo apt update
-sudo apt upgrade -y
+apt update -y
+apt install wget -y
+wget https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu22.04_all.deb
+dpkg -i zabbix-release_6.4-1+ubuntu22.04_all.deb
+apt update -y
+apt install zabbix-agent -y
 
-# Instalar el paquete Zabbix Agent
-sudo apt install -y zabbix-agent
+# Configurar zabbix_agentd.conf
+sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+sed -i 's/^ServerActive=.*/ServerActive=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+sed -i 's/^Hostname=.*/Hostname=Web-SRV/' /etc/zabbix/zabbix_agentd.conf
 
-# Configurar el archivo de configuración del Zabbix Agent
-sudo cp /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.backup  # Realiza una copia de seguridad del archivo de configuración original
-
-sudo sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf  # Configura el parámetro Server con la IP del servidor Zabbix
-
-# Reiniciar el servicio del agente Zabbix
-sudo systemctl restart zabbix-agent
-
-# Verificar el estado del servicio
-sudo systemctl status zabbix-agent
+systemctl restart zabbix-agent
+systemctl enable zabbix-agent
+systemctl status zabbix-agent
 
 # Actualización de PAM
 sudo pam-auth-update --force --package pwquality
