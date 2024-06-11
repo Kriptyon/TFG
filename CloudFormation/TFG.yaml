@@ -162,10 +162,18 @@ Resources:
           FromPort: 10051
           ToPort: 10051
           CidrIp: 10.0.3.0/24
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           FromPort: 0
           ToPort: 0
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
@@ -198,10 +206,10 @@ Resources:
       InstanceType: t2.micro
       KeyName: BHKP
       NetworkInterfaces:
-      - NetworkInterfaceId: !Ref BastionHostInterface1
-        DeviceIndex: 0
-      - NetworkInterfaceId: !Ref BastionHostInterface2
-        DeviceIndex: 1
+        - NetworkInterfaceId: !Ref BastionHostInterface1
+          DeviceIndex: 0
+        - NetworkInterfaceId: !Ref BastionHostInterface2
+          DeviceIndex: 1
       IamInstanceProfile: !Ref CWInstanceProfile
       UserData: !Base64 |
         #!/bin/bash
@@ -238,7 +246,6 @@ Resources:
           FromPort: 10051
           ToPort: 10051
           CidrIp: 10.0.3.0/24
-          CidrIp: 0.0.0.0/0
         - IpProtocol: tcp
           FromPort: 80
           ToPort: 80
@@ -247,10 +254,18 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           FromPort: 0
           ToPort: 0
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
@@ -336,10 +351,18 @@ Resources:
           FromPort: 443
           ToPort: 443
           CidrIp: 0.0.0.0/0
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: -1
           FromPort: 0
           ToPort: 0
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: icmp
+          FromPort: -1
+          ToPort: -1
           CidrIp: 0.0.0.0/0
       Tags:
         - Key: Name
