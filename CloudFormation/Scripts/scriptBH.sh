@@ -306,20 +306,21 @@ sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
 #Zabbix
-yum update -y
-yum install wget -y
-wget https://repo.zabbix.com/zabbix/6.4/rhel/9/x86_64/zabbix-release-6.4-1.el9.noarch.rpm
-rpm -Uvh zabbix-release-6.4-1.el9.noarch.rpm
-yum update -y
-yum install zabbix-agent -y
+# yum update -y
+# yum install wget -y
+# wget https://repo.zabbix.com/zabbix/6.4/rhel/9/x86_64/zabbix-release-6.4-1.el9.noarch.rpm
+# rpm -Uvh zabbix-release-6.4-1.el9.noarch.rpm
+# yum update -y
+# yum install zabbix-agent -y
 
-sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
-sed -i 's/^ServerActive=.*/ServerActive=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
-sed -i 's/^Hostname=.*/Hostname=bastionHealth/' /etc/zabbix/zabbix_agentd.conf
+# sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+# sed -i 's/^ServerActive=.*/ServerActive=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+# sed -i 's/^Hostname=.*/Hostname=bastionHealth/' /etc/zabbix/zabbix_agentd.conf
 
-systemctl restart zabbix-agent
-systemctl enable zabbix-agent
-systemctl status zabbix-agent
+# systemctl restart zabbix-agent
+# systemctl enable zabbix-agent
+# systemctl status zabbix-agent
+
 # Telegram
 
 # Token y chat_id de Telegram
