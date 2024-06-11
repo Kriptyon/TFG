@@ -45,7 +45,11 @@ if [ -n "$DESIRED_HOSTNAME" ]; then
     sed -i "s/127.0.0.1 localhost/127.0.0.1 localhost $DESIRED_HOSTNAME/g" /etc/hosts
 fi
 
-
+#BANNER
+sudo sed -i 's/#Banner none/Banner \/etc\/issue.net/' /etc/ssh/sshd_config
+echo -e "* * * * * * * * * * W A R N I N G * * * * * * * * * *\n\nThis system is the private property, for authorized personnel only.\nBy using this system, you agree to comply with the company Information Technology Policies & Standards.\nUnauthorized or improper use of this system may result in administrative disciplinary action,\ncivil charges/criminal penalties, and/or other sanctions according to company policies, Spain and European Union laws.\n\n\nBy continuing to use this system you indicate your awareness of and consent to these terms and conditions of use.\n\n * * * * * * * * * * * * * * * * * * * * * *\n\n\n * * * * * * * * * AVISO * * * * * * * * * \n\nEste sistema es propiedad privada, sólo para personal autorizado.\nAl utilizar este sistema, usted acepta cumplir con las Políticas, normas de uso de las tecnologías de información y comunicaciones.\nEl uso no autorizado o inapropiado de este sistema, podrá causar acciones disciplinarias administrativas,\ncargos civiles o sanciones penales, además de otras sanciones de acuerdo con las políticas de la compañía, las leyes de España y la Unión Europea.\n\n\nAl continuar utilizando este sistema, usted indica que conoce y acepta estos términos y condiciones de uso.\n\n * * * * * * * * * * * * * * * * * * * * * *" | sudo tee /etc/issue.net
+sudo chmod 664 /etc/issue.net
+sudo systemctl restart sshd
 #PAM
 # Password Complexity (Using PAM modules)
 # Install necessary packages
@@ -301,8 +305,30 @@ sudo systemctl enable ssh
 sudo systemctl start ssh
 sudo systemctl restart ssh
 
-# Install necessary packages
-
+#ZABBIX
+ZABBIX_DB_PASSWORD="password"
+wget https://repo.zabbix.com/zabbix/6.0/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.0-4+ubuntu22.04_all.deb
+dpkg -i zabbix-release_6.0-4+ubuntu22.04_all.deb
+apt update
+apt install -y zabbix-server-mysql zabbix-agent zabbix-apache-conf zabbix-sql-scripts zabbix-frontend-php mysql-server
+systemctl start mysql
+mysql -uroot <<EOF
+CREATE DATABASE zabbix CHARACTER SET utf8mb4 COLLATE utf8mb4_bin;
+CREATE USER 'zabbix'@'localhost' IDENTIFIED BY '$ZABBIX_DB_PASSWORD';
+GRANT ALL PRIVILEGES ON zabbix.* TO 'zabbix'@'localhost';
+SET GLOBAL log_bin_trust_function_creators = 1;
+FLUSH PRIVILEGES;
+QUIT;
+EOF
+zcat /usr/share/zabbix-sql-scripts/mysql/server.sql.gz | mysql --default-character-set=utf8mb4 -uzabbix -p$ZABBIX_DB_PASSWORD zabbix
+mysql -uroot <<EOF
+SET GLOBAL log_bin_trust_function_creators = 0;
+QUIT;
+EOF
+sed -i "s/^# DBPassword=.*/DBPassword=$ZABBIX_DB_PASSWORD/" /etc/zabbix/zabbix_server.conf
+systemctl restart zabbix-server zabbix-agent apache2
+systemctl enable zabbix-server zabbix-agent apache2
+systemctl restart zabbix-server zabbix-agent apache2
 # Telegram
 
 # Token and chat_id for Telegram

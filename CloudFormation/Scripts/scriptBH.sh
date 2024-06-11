@@ -55,7 +55,11 @@ if [ -n "$DESIRED_HOSTNAME" ]; then
     hostnamectl set-hostname "$DESIRED_HOSTNAME"
     sed -i "s/127.0.0.1 localhost/127.0.0.1 localhost $DESIRED_HOSTNAME/g" /etc/hosts
 fi
-
+#BANNER
+sudo sed -i 's/#Banner none/Banner \/etc\/issue.net/' /etc/ssh/sshd_config
+echo -e "* * * * * * * * * * W A R N I N G * * * * * * * * * *\n\nThis system is the private property, for authorized personnel only.\nBy using this system, you agree to comply with the company Information Technology Policies & Standards.\nUnauthorized or improper use of this system may result in administrative disciplinary action,\ncivil charges/criminal penalties, and/or other sanctions according to company policies, Spain and European Union laws.\n\n\nBy continuing to use this system you indicate your awareness of and consent to these terms and conditions of use.\n\n * * * * * * * * * * * * * * * * * * * * * *\n\n\n * * * * * * * * * AVISO * * * * * * * * * \n\nEste sistema es propiedad privada, sólo para personal autorizado.\nAl utilizar este sistema, usted acepta cumplir con las Políticas, normas de uso de las tecnologías de información y comunicaciones.\nEl uso no autorizado o inapropiado de este sistema, podrá causar acciones disciplinarias administrativas,\ncargos civiles o sanciones penales, además de otras sanciones de acuerdo con las políticas de la compañía, las leyes de España y la Unión Europea.\n\n\nAl continuar utilizando este sistema, usted indica que conoce y acepta estos términos y condiciones de uso.\n\n * * * * * * * * * * * * * * * * * * * * * *" | sudo tee /etc/issue.net
+sudo chmod 664 /etc/issue.net
+sudo systemctl restart sshd
 # PAM
 # Complejidad de la contraseña (usando módulos PAM)
 # Instala los paquetes necesarios
@@ -302,40 +306,21 @@ sort -u -o "$custom_dict" "$custom_dict"
 create-cracklib-dict /usr/share/dict/custom-dict /usr/share/dict/cracklib-small
 
 #Zabbix
+# yum update -y
+# yum install wget -y
+# wget https://repo.zabbix.com/zabbix/6.4/rhel/9/x86_64/zabbix-release-6.4-1.el9.noarch.rpm
+# rpm -Uvh zabbix-release-6.4-1.el9.noarch.rpm
+# yum update -y
+# yum install zabbix-agent -y
 
-# Variables
-ZABBIX_VERSION="6.0" 
-ZABBIX_SERVER_IP="10.0.3.10" 
+# sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+# sed -i 's/^ServerActive=.*/ServerActive=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+# sed -i 's/^Hostname=.*/Hostname=bastionHealth/' /etc/zabbix/zabbix_agentd.conf
 
-# Update the system
-sudo yum update -y
+# systemctl restart zabbix-agent
+# systemctl enable zabbix-agent
+# systemctl status zabbix-agent
 
-# Install prerequisites
-sudo yum install -y wget
-
-# Download the Zabbix repository package
-wget https://repo.zabbix.com/zabbix/$ZABBIX_VERSION/rhel/9/x86_64/zabbix-release-$ZABBIX_VERSION-1.el9.noarch.rpm
-
-# Install the Zabbix repository
-sudo rpm -Uvh zabbix-release-$ZABBIX_VERSION-1.el9.noarch.rpm
-
-# Clean the repository cache
-sudo yum clean all
-
-# Install the Zabbix agent
-sudo yum install -y zabbix-agent
-
-# Configure the Zabbix agent
-sudo sed -i "s/^Server=.*/Server=$ZABBIX_SERVER_IP/" /etc/zabbix/zabbix_agentd.conf
-sudo sed -i "s/^ServerActive=.*/ServerActive=$ZABBIX_SERVER_IP/" /etc/zabbix/zabbix_agentd.conf
-sudo sed -i "s/^Hostname=.*/Hostname=$(hostname)/" /etc/zabbix/zabbix_agentd.conf
-
-# Enable and start the Zabbix agent service
-sudo systemctl enable zabbix-agent
-sudo systemctl start zabbix-agent
-
-# Verify the Zabbix agent is running
-sudo systemctl status zabbix-agent
 # Telegram
 
 # Token y chat_id de Telegram

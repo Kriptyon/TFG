@@ -48,6 +48,11 @@ if [ -n "$DESIRED_HOSTNAME" ]; then
     sed -i "s/127.0.0.1 localhost/127.0.0.1 localhost $DESIRED_HOSTNAME/g" /etc/hosts
 fi
 
+#BANNER
+sudo sed -i 's/#Banner none/Banner \/etc\/issue.net/' /etc/ssh/sshd_config
+echo -e "* * * * * * * * * * W A R N I N G * * * * * * * * * *\n\nThis system is the private property, for authorized personnel only.\nBy using this system, you agree to comply with the company Information Technology Policies & Standards.\nUnauthorized or improper use of this system may result in administrative disciplinary action,\ncivil charges/criminal penalties, and/or other sanctions according to company policies, Spain and European Union laws.\n\n\nBy continuing to use this system you indicate your awareness of and consent to these terms and conditions of use.\n\n * * * * * * * * * * * * * * * * * * * * * *\n\n\n * * * * * * * * * AVISO * * * * * * * * * \n\nEste sistema es propiedad privada, sólo para personal autorizado.\nAl utilizar este sistema, usted acepta cumplir con las Políticas, normas de uso de las tecnologías de información y comunicaciones.\nEl uso no autorizado o inapropiado de este sistema, podrá causar acciones disciplinarias administrativas,\ncargos civiles o sanciones penales, además de otras sanciones de acuerdo con las políticas de la compañía, las leyes de España y la Unión Europea.\n\n\nAl continuar utilizando este sistema, usted indica que conoce y acepta estos términos y condiciones de uso.\n\n * * * * * * * * * * * * * * * * * * * * * *" | sudo tee /etc/issue.net
+sudo chmod 664 /etc/issue.net
+sudo systemctl restart sshd
 #PAM
 # Password Complexity (Using PAM modules)
 # Install necessary packages
@@ -302,23 +307,21 @@ sudo systemctl restart ssh
 
 #Zabbix Agent
 
-# Actualizar el sistema
-sudo apt update
-sudo apt upgrade -y
+apt update -y
+apt install wget -y
+wget https://repo.zabbix.com/zabbix/6.4/ubuntu/pool/main/z/zabbix-release/zabbix-release_6.4-1+ubuntu22.04_all.deb
+dpkg -i zabbix-release_6.4-1+ubuntu22.04_all.deb
+apt update -y
+apt install zabbix-agent -y
 
-# Instalar el paquete Zabbix Agent
-sudo apt install -y zabbix-agent
+# Configurar zabbix_agentd.conf
+sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+sed -i 's/^ServerActive=.*/ServerActive=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf
+sed -i 's/^Hostname=.*/Hostname=Web-SRV/' /etc/zabbix/zabbix_agentd.conf
 
-# Configurar el archivo de configuración del Zabbix Agent
-sudo cp /etc/zabbix/zabbix_agentd.conf /etc/zabbix/zabbix_agentd.conf.backup  # Realiza una copia de seguridad del archivo de configuración original
-
-sudo sed -i 's/^Server=.*/Server=10.0.3.10/' /etc/zabbix/zabbix_agentd.conf  # Configura el parámetro Server con la IP del servidor Zabbix
-
-# Reiniciar el servicio del agente Zabbix
-sudo systemctl restart zabbix-agent
-
-# Verificar el estado del servicio
-sudo systemctl status zabbix-agent
+systemctl restart zabbix-agent
+systemctl enable zabbix-agent
+systemctl status zabbix-agent
 
 # Actualización de PAM
 sudo pam-auth-update --force --package pwquality
