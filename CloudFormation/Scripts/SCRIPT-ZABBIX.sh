@@ -47,7 +47,7 @@ fi
 
 #BANNER
 chmod 664 /etc/issue.net && echo -e "* * * * * * * * * * W A R N I N G * * * * * * * * * \n\nThis system is the private property, for authorized personnel only.\nBy using this system, you agree to comply with the company Information Technology Policies & Standards.\nUnauthorized or improper use of this system may result in administrative disciplinary action,\ncivil charges/criminal penalties, and/or other sanctions according to company policies, Spain and European Union laws.\n\n\nBy continuing to use this system you indicate your awareness of and consent to these terms and conditions of use.\n\n * * * * * * * * * * * * * * * * * * * * * * \n\n\n * * * * * * * * * AVISO * * * * * * * * * \n\nEste sistema es propiedad privada, sólo para personal autorizado.\nAl utilizar este sistema, usted acepta cumplir con las Políticas, normas de uso de las tecnologías de información y comunicaciones.\nEl uso no autorizado o inapropiado de este sistema, podrá causar acciones disciplinarias administrativas,\ncargos civiles o sanciones penales, además de otras sanciones de acuerdo con las políticas de la compañía, las leyes de España y la Unión Europea.\n\n\nAl continuar utilizando este sistema, usted indica que conoce y acepta estos términos y condiciones de uso.\n\n * * * * * * * * * * * * * * * * * * * * * *" > /etc/issue.net 
-
+sudo systemctl restart sshd
 #PAM
 # Password Complexity (Using PAM modules)
 # Install necessary packages
